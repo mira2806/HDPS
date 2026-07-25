@@ -1,0 +1,535 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% set active_page = 'analysis' %}
+{% set active_group = '' %}
+
+{% block title %}Analysis — HeartGuard{% endblock %}
+{% block page_title %}Analysis{% endblock %}
+{% block breadcrumb %}<span>Analysis</span><span class="iconify" data-icon="fluent:chevron-right-12-regular"></span><span>Overview</span>{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── Analysis page layout ── */
+  .an-section-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--d-text-2);
+    margin: 28px 0 12px;
+  }
+
+  /* Summary stat row */
+  .an-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 900px)  { .an-stats { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 480px)  { .an-stats { grid-template-columns: 1fr; } }
+
+  .an-stat {
+    background: var(--card-bg, rgba(255,255,255,0.72));
+    backdrop-filter: blur(18px) saturate(1.6);
+    -webkit-backdrop-filter: blur(18px) saturate(1.6);
+    border: 1px solid rgba(255,255,255,0.55);
+    border-radius: 14px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  }
+  .an-stat-ico {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .an-stat-ico.green  { background: rgba(132,204,22,.15); color: #5a8a00; }
+  .an-stat-ico.teal   { background: rgba(14,140,127,.12); color: var(--primary); }
+  .an-stat-ico.red    { background: rgba(185,28,28,.10);  color: #b91c1c; }
+  .an-stat-ico.amber  { background: rgba(217,119,6,.10);  color: #b45309; }
+  .an-stat-val  { font-size: 26px; font-weight: 700; color: var(--d-text); line-height: 1; }
+  .an-stat-lbl  { font-size: 11px; color: var(--d-text-2); margin-top: 3px; }
+
+  /* Chart grid */
+  .an-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .an-grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .an-grid-wide {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  @media (max-width: 1100px) {
+    .an-grid-3    { grid-template-columns: 1fr 1fr; }
+    .an-grid-wide { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 720px)  {
+    .an-grid-2    { grid-template-columns: 1fr; }
+    .an-grid-3    { grid-template-columns: 1fr; }
+    .an-grid-wide { grid-template-columns: 1fr; }
+  }
+
+  /* Chart card */
+  .ch-card {
+    background: var(--card-bg, rgba(255,255,255,0.72));
+    backdrop-filter: blur(18px) saturate(1.6);
+    -webkit-backdrop-filter: blur(18px) saturate(1.6);
+    border: 1px solid rgba(255,255,255,0.55);
+    border-radius: 16px;
+    padding: 20px 22px 18px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    display: flex;
+    flex-direction: column;
+  }
+  .ch-title  { font-size: 13px; font-weight: 600; color: var(--d-text);  margin-bottom: 3px; }
+  .ch-sub    { font-size: 11px; color: var(--d-text-2); margin-bottom: 14px; }
+  .ch-wrap   { position: relative; flex: 1; min-height: 0; }
+  .ch-wrap canvas { width: 100% !important; }
+
+  /* Donut legend */
+  .ch-legend {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    margin-top: 12px;
+    justify-content: center;
+  }
+  .ch-leg-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--d-text-2); }
+  .ch-leg-dot  { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="dash-welcome">
+  <div>
+    <p class="welcome-msg">Analytics Overview</p>
+    <p class="welcome-sub">Visualised insights from all patient detection records.</p>
+  </div>
+  <div class="welcome-date">
+    <span class="iconify" data-icon="fluent:calendar-24-regular"></span>
+    <span id="today-date"></span>
+  </div>
+</div>
+
+<!-- ── Summary Stats ── -->
+<div class="an-stats">
+  <div class="an-stat">
+    <div class="an-stat-ico teal"><span class="iconify" data-icon="fluent:heart-pulse-24-filled"></span></div>
+    <div>
+      <div class="an-stat-val">{{ total_diagnoses }}</div>
+      <div class="an-stat-lbl">Total Diagnoses</div>
+    </div>
+  </div>
+  <div class="an-stat">
+    <div class="an-stat-ico red"><span class="iconify" data-icon="fluent:heart-broken-24-filled"></span></div>
+    <div>
+      <div class="an-stat-val">{{ positive_cases }}</div>
+      <div class="an-stat-lbl">Positive Cases ({{ positive_rate }}%)</div>
+    </div>
+  </div>
+  <div class="an-stat">
+    <div class="an-stat-ico green"><span class="iconify" data-icon="fluent:checkmark-circle-24-filled"></span></div>
+    <div>
+      <div class="an-stat-val">{{ negative_cases }}</div>
+      <div class="an-stat-lbl">Negative Cases</div>
+    </div>
+  </div>
+  <div class="an-stat">
+    <div class="an-stat-ico amber"><span class="iconify" data-icon="fluent:data-bar-vertical-24-filled"></span></div>
+    <div>
+      <div class="an-stat-val">{{ avg_score }}%</div>
+      <div class="an-stat-lbl">Avg Risk Score</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Row 1: Daily trend (wide) + Risk doughnut ── -->
+<div class="an-grid-wide">
+
+  <div class="ch-card">
+    <div class="ch-title">Diagnoses — Last 30 Days</div>
+    <div class="ch-sub">Daily count of heart disease screenings</div>
+    <div class="ch-wrap" style="height:220px;">
+      <canvas id="chartDaily"></canvas>
+    </div>
+  </div>
+
+  <div class="ch-card">
+    <div class="ch-title">Risk Level Distribution</div>
+    <div class="ch-sub">Breakdown by High / Medium / Low risk</div>
+    <div class="ch-wrap" style="height:180px;">
+      <canvas id="chartRisk"></canvas>
+    </div>
+    <div class="ch-legend">
+      <div class="ch-leg-item"><div class="ch-leg-dot" style="background:#b91c1c;"></div>High</div>
+      <div class="ch-leg-item"><div class="ch-leg-dot" style="background:#f97316;"></div>Medium</div>
+      <div class="ch-leg-item"><div class="ch-leg-dot" style="background:#84cc16;"></div>Low</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Row 2: Monthly trend + Age groups + Prediction ── -->
+<div class="an-grid-3">
+
+  <div class="ch-card">
+    <div class="ch-title">Monthly Trend</div>
+    <div class="ch-sub">Total screenings per month</div>
+    <div class="ch-wrap" style="height:200px;">
+      <canvas id="chartMonthly"></canvas>
+    </div>
+  </div>
+
+  <div class="ch-card">
+    <div class="ch-title">Age Group Distribution</div>
+    <div class="ch-sub">Patients screened by age bracket</div>
+    <div class="ch-wrap" style="height:200px;">
+      <canvas id="chartAge"></canvas>
+    </div>
+  </div>
+
+  <div class="ch-card">
+    <div class="ch-title">Prediction Outcome</div>
+    <div class="ch-sub">Heart disease detected vs not detected</div>
+    <div class="ch-wrap" style="height:160px;">
+      <canvas id="chartPrediction"></canvas>
+    </div>
+    <div class="ch-legend">
+      <div class="ch-leg-item"><div class="ch-leg-dot" style="background:#b91c1c;"></div>Detected</div>
+      <div class="ch-leg-item"><div class="ch-leg-dot" style="background:#0E8C7F;"></div>Not Detected</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Row 3: Sex + Chest Pain + Cholesterol ── -->
+<div class="an-grid-3">
+
+  <div class="ch-card">
+    <div class="ch-title">Sex Distribution</div>
+    <div class="ch-sub">Male vs Female among screened patients</div>
+    <div class="ch-wrap" style="height:170px;">
+      <canvas id="chartSex"></canvas>
+    </div>
+    <div class="ch-legend">
+      <div class="ch-leg-item"><div class="ch-leg-dot" style="background:#0E8C7F;"></div>Male</div>
+      <div class="ch-leg-item"><div class="ch-leg-dot" style="background:#84cc16;"></div>Female</div>
+    </div>
+  </div>
+
+  <div class="ch-card">
+    <div class="ch-title">Chest Pain Types</div>
+    <div class="ch-sub">Distribution of chest pain categories</div>
+    <div class="ch-wrap" style="height:200px;">
+      <canvas id="chartCp"></canvas>
+    </div>
+  </div>
+
+  <div class="ch-card">
+    <div class="ch-title">Cholesterol Levels</div>
+    <div class="ch-sub">Patient cholesterol range breakdown (mg/dl)</div>
+    <div class="ch-wrap" style="height:200px;">
+      <canvas id="chartChol"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Row 4: Top Doctors (full width) ── -->
+<div class="ch-card" style="margin-bottom:16px;">
+  <div class="ch-title">Top Doctors by Diagnosis Count</div>
+  <div class="ch-sub">Doctors with the most completed screenings</div>
+  <div class="ch-wrap" style="height:180px;">
+    <canvas id="chartDoctors"></canvas>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script>
+/* ── Data from server ── */
+const riskData    = {{ risk_json | safe }};
+const dailyLabels = {{ daily_labels | safe }};
+const dailyValues = {{ daily_values | safe }};
+const monthLabels = {{ month_labels | safe }};
+const monthValues = {{ month_values | safe }};
+const ageLabels   = {{ age_labels | safe }};
+const ageValues   = {{ age_values | safe }};
+const sexLabels   = {{ sex_labels | safe }};
+const sexValues   = {{ sex_values | safe }};
+const cpLabels    = {{ cp_labels | safe }};
+const cpValues    = {{ cp_values | safe }};
+const docLabels   = {{ doc_labels | safe }};
+const docValues   = {{ doc_values | safe }};
+const cholLabels  = {{ chol_labels | safe }};
+const cholValues  = {{ chol_values | safe }};
+const posCase     = {{ positive_cases }};
+const negCase     = {{ negative_cases }};
+
+/* ── Shared defaults ── */
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.font.size   = 11;
+Chart.defaults.color       = '#486562';
+
+const gridColor  = 'rgba(72,101,98,0.10)';
+const primaryTeal = '#0E8C7F';
+const lime        = '#84cc16';
+const red         = '#b91c1c';
+const orange      = '#f97316';
+const amber       = '#f59e0b';
+const blue        = '#3b82f6';
+
+function tooltip(extra) {
+  return {
+    backgroundColor: 'rgba(13,36,32,0.88)',
+    titleColor: '#d4ffb4',
+    bodyColor: '#e2f5ea',
+    borderColor: 'rgba(132,204,22,0.25)',
+    borderWidth: 1,
+    padding: 10,
+    cornerRadius: 8,
+    ...extra
+  };
+}
+
+/* ── 1. Daily line chart ── */
+new Chart(document.getElementById('chartDaily'), {
+  type: 'line',
+  data: {
+    labels: dailyLabels,
+    datasets: [{
+      label: 'Diagnoses',
+      data: dailyValues,
+      borderColor: primaryTeal,
+      backgroundColor: 'rgba(14,140,127,0.10)',
+      borderWidth: 2,
+      pointRadius: 3,
+      pointHoverRadius: 5,
+      pointBackgroundColor: primaryTeal,
+      fill: true,
+      tension: 0.4,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: {}, ...tooltip() } },
+    scales: {
+      x: { grid: { color: gridColor }, ticks: { maxTicksLimit: 10 } },
+      y: { grid: { color: gridColor }, beginAtZero: true, ticks: { stepSize: 1 } }
+    }
+  }
+});
+
+/* ── 2. Risk doughnut ── */
+new Chart(document.getElementById('chartRisk'), {
+  type: 'doughnut',
+  data: {
+    labels: ['High', 'Medium', 'Low'],
+    datasets: [{
+      data: [riskData.High, riskData.Medium, riskData.Low],
+      backgroundColor: [red, orange, lime],
+      borderWidth: 0,
+      hoverOffset: 6,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    cutout: '68%',
+    plugins: { legend: { display: false }, tooltip: tooltip() }
+  }
+});
+
+/* ── 3. Monthly bar ── */
+new Chart(document.getElementById('chartMonthly'), {
+  type: 'bar',
+  data: {
+    labels: monthLabels,
+    datasets: [{
+      label: 'Diagnoses',
+      data: monthValues,
+      backgroundColor: 'rgba(14,140,127,0.75)',
+      borderRadius: 6,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: tooltip() },
+    scales: {
+      x: { grid: { display: false } },
+      y: { grid: { color: gridColor }, beginAtZero: true, ticks: { stepSize: 1 } }
+    }
+  }
+});
+
+/* ── 4. Age group bar ── */
+new Chart(document.getElementById('chartAge'), {
+  type: 'bar',
+  data: {
+    labels: ageLabels,
+    datasets: [{
+      label: 'Patients',
+      data: ageValues,
+      backgroundColor: [
+        'rgba(132,204,22,0.75)',
+        'rgba(14,140,127,0.75)',
+        'rgba(59,130,246,0.75)',
+        'rgba(245,158,11,0.75)',
+        'rgba(249,115,22,0.75)',
+        'rgba(185,28,28,0.75)',
+      ],
+      borderRadius: 6,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: tooltip() },
+    scales: {
+      x: { grid: { display: false } },
+      y: { grid: { color: gridColor }, beginAtZero: true, ticks: { stepSize: 1 } }
+    }
+  }
+});
+
+/* ── 5. Prediction doughnut ── */
+new Chart(document.getElementById('chartPrediction'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Heart Disease', 'No Disease'],
+    datasets: [{
+      data: [posCase, negCase],
+      backgroundColor: [red, primaryTeal],
+      borderWidth: 0,
+      hoverOffset: 6,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    cutout: '65%',
+    plugins: { legend: { display: false }, tooltip: tooltip() }
+  }
+});
+
+/* ── 6. Sex doughnut ── */
+new Chart(document.getElementById('chartSex'), {
+  type: 'doughnut',
+  data: {
+    labels: sexLabels,
+    datasets: [{
+      data: sexValues,
+      backgroundColor: [primaryTeal, lime],
+      borderWidth: 0,
+      hoverOffset: 6,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    cutout: '65%',
+    plugins: { legend: { display: false }, tooltip: tooltip() }
+  }
+});
+
+/* ── 7. Chest pain bar ── */
+new Chart(document.getElementById('chartCp'), {
+  type: 'bar',
+  data: {
+    labels: cpLabels,
+    datasets: [{
+      label: 'Patients',
+      data: cpValues,
+      backgroundColor: [
+        'rgba(14,140,127,0.75)',
+        'rgba(132,204,22,0.75)',
+        'rgba(245,158,11,0.75)',
+        'rgba(185,28,28,0.75)',
+      ],
+      borderRadius: 6,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: tooltip() },
+    scales: {
+      x: { grid: { display: false }, ticks: { maxRotation: 30 } },
+      y: { grid: { color: gridColor }, beginAtZero: true, ticks: { stepSize: 1 } }
+    }
+  }
+});
+
+/* ── 8. Cholesterol bar ── */
+new Chart(document.getElementById('chartChol'), {
+  type: 'bar',
+  data: {
+    labels: cholLabels,
+    datasets: [{
+      label: 'Patients',
+      data: cholValues,
+      backgroundColor: [
+        'rgba(132,204,22,0.75)',
+        'rgba(245,158,11,0.75)',
+        'rgba(249,115,22,0.75)',
+        'rgba(185,28,28,0.75)',
+      ],
+      borderRadius: 6,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: tooltip() },
+    scales: {
+      x: { grid: { display: false } },
+      y: { grid: { color: gridColor }, beginAtZero: true, ticks: { stepSize: 1 } }
+    }
+  }
+});
+
+/* ── 9. Top doctors horizontal bar ── */
+const docCanvas = document.getElementById('chartDoctors');
+if (docCanvas && docLabels.length) {
+  new Chart(docCanvas, {
+    type: 'bar',
+    data: {
+      labels: docLabels,
+      datasets: [{
+        label: 'Diagnoses',
+        data: docValues,
+        backgroundColor: 'rgba(14,140,127,0.75)',
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: tooltip() },
+      scales: {
+        x: { grid: { color: gridColor }, beginAtZero: true, ticks: { stepSize: 1 } },
+        y: { grid: { display: false } }
+      }
+    }
+  });
+}
+
+/* ── Today's date ── */
+document.getElementById('today-date').textContent =
+  new Date().toLocaleDateString('en-US', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+</script>
+{% endblock %}

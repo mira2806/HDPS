@@ -1,0 +1,13 @@
+venv/
+__pycache__/
+*.pyc
+*.pyo
+instance/
+.secret_key
+*.db
+.env
+.env.*
+app/static/uploads/
+*.log
+.DS_Store
+Thumbs.db

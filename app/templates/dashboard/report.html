@@ -1,0 +1,447 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% set active_page = 'report' %}
+{% set active_group = '' %}
+
+{% block title %}Report — HeartGuard{% endblock %}
+{% block page_title %}Report{% endblock %}
+{% block breadcrumb %}<span>Report</span>{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Report generator layout ── */
+.rpt-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 860px) { .rpt-layout { grid-template-columns: 1fr; } }
+
+/* Config panel */
+.rpt-config { position: sticky; top: 80px; }
+.rpt-config .card-body { display: flex; flex-direction: column; gap: 14px; }
+
+.rpt-field label {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--d-text-3);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-bottom: 5px;
+}
+.rpt-field select,
+.rpt-field input[type="date"] {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--d-border);
+  border-radius: 8px;
+  font-size: 12px;
+  background: rgba(255,255,255,.7);
+  color: var(--d-text);
+  outline: none;
+  transition: border-color .15s;
+}
+.rpt-field select:focus,
+.rpt-field input[type="date"]:focus { border-color: var(--primary); }
+
+.btn-generate {
+  width: 100%;
+  padding: 10px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  transition: opacity .15s;
+}
+.btn-generate:hover { opacity: .88; }
+
+.btn-print {
+  width: 100%;
+  padding: 9px;
+  background: transparent;
+  color: var(--d-text-2);
+  border: 1px solid var(--d-border);
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  transition: background .15s, color .15s;
+}
+.btn-print:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+/* ── Report document ── */
+.rpt-doc { background: rgba(255,255,255,.9); backdrop-filter: blur(18px); border-radius: 14px; border: 1px solid rgba(255,255,255,.6); box-shadow: 0 4px 22px rgba(0,0,0,.07); overflow: hidden; }
+
+.rpt-doc-hd {
+  background: var(--primary);
+  padding: 28px 28px 22px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.rpt-doc-hd-title { color: #fff; font-size: 18px; font-weight: 700; line-height: 1.2; }
+.rpt-doc-hd-sub   { color: rgba(255,255,255,.7); font-size: 11px; margin-top: 4px; }
+.rpt-doc-hd-meta  { text-align: right; }
+.rpt-doc-hd-meta span { display: block; color: rgba(255,255,255,.7); font-size: 10.5px; }
+.rpt-doc-hd-meta strong { color: #fff; font-size: 11px; }
+
+/* Summary strip */
+.rpt-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-bottom: 1px solid #e8f0ef;
+}
+@media (max-width: 700px) { .rpt-summary { grid-template-columns: repeat(2, 1fr); } }
+.rpt-sum-item {
+  padding: 16px 20px;
+  border-right: 1px solid #e8f0ef;
+  text-align: center;
+}
+.rpt-sum-item:last-child { border-right: none; }
+.rpt-sum-val { font-size: 22px; font-weight: 700; color: var(--d-text); line-height: 1; }
+.rpt-sum-lbl { font-size: 10px; color: var(--d-text-3); margin-top: 3px; text-transform: uppercase; letter-spacing: .05em; }
+
+/* Section heading inside report */
+.rpt-section { padding: 18px 22px 4px; }
+.rpt-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e8f0ef;
+  margin-bottom: 0;
+}
+
+/* Risk bars */
+.rpt-risk-rows { padding: 14px 22px 18px; display: flex; flex-direction: column; gap: 10px; }
+.rpt-risk-row { display: flex; align-items: center; gap: 12px; }
+.rpt-risk-name { font-size: 11.5px; font-weight: 500; color: var(--d-text); width: 80px; flex-shrink: 0; }
+.rpt-risk-bar-wrap { flex: 1; height: 7px; background: #f0f0f0; border-radius: 99px; overflow: hidden; }
+.rpt-risk-bar { height: 100%; border-radius: 99px; }
+.rb-hi { background: #b91c1c; }
+.rb-md { background: #f59e0b; }
+.rb-lo { background: #15803d; }
+.rpt-risk-pct { font-size: 11.5px; font-weight: 700; width: 42px; text-align: right; flex-shrink: 0; }
+.rpt-risk-cnt { font-size: 10.5px; color: var(--d-text-3); width: 64px; flex-shrink: 0; }
+
+/* Table inside doc */
+.rpt-tbl-wrap { padding: 0 22px 18px; overflow-x: auto; }
+.rpt-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11.5px;
+  min-width: 540px;
+}
+.rpt-tbl thead tr { background: #f7faf9; }
+.rpt-tbl th {
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--d-text-3);
+  border-bottom: 1px solid #e8f0ef;
+}
+.rpt-tbl td {
+  padding: 9px 12px;
+  border-bottom: 1px solid #f2f6f5;
+  color: var(--d-text);
+}
+.rpt-tbl tfoot td {
+  padding: 9px 12px;
+  background: #f7faf9;
+  font-weight: 700;
+  border-top: 1px solid #e8f0ef;
+  color: var(--d-text);
+}
+.rpt-tbl tbody tr:last-child td { border-bottom: none; }
+
+.rpt-empty { padding: 32px 22px; text-align: center; color: var(--d-text-3); font-size: 12px; }
+
+/* Badges inline */
+.b { display:inline-block; padding:1px 8px; border-radius:99px; font-size:10.5px; font-weight:600; }
+.b-hi { background:#fee2e2; color:#b91c1c; }
+.b-md { background:#ffedd5; color:#c2410c; }
+.b-lo { background:#dcfce7; color:#15803d; }
+
+/* Footer */
+.rpt-doc-ft { padding: 14px 22px; border-top: 1px solid #e8f0ef; display: flex; justify-content: space-between; align-items: center; }
+.rpt-doc-ft span { font-size: 10px; color: var(--d-text-3); }
+
+/* Print styles */
+@media print {
+  .rpt-config, .pg-hd { display: none !important; }
+  .rpt-layout { display: block; }
+  .rpt-doc { box-shadow: none; border: none; }
+  .rpt-doc-hd { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="pg-hd">
+  <div class="pg-hd-left">
+    <h2>Generate Report</h2>
+    <p>Configure and export system reports</p>
+  </div>
+</div>
+
+<div class="rpt-layout">
+
+  <!-- ── Config panel ── -->
+  <div class="dash-card rpt-config">
+    <div class="card-hd">
+      <div>
+        <div class="card-title">Report Options</div>
+        <div class="card-sub">Select type and date range</div>
+      </div>
+    </div>
+    <div class="card-body">
+
+      <div class="rpt-field">
+        <label>Report Type</label>
+        <select id="rpt-type">
+          <option value="summary">System Summary</option>
+          <option value="monthly">Monthly Breakdown</option>
+          <option value="risk">Risk Distribution</option>
+          <option value="full">Full Report</option>
+        </select>
+      </div>
+
+      <div class="rpt-field">
+        <label>From</label>
+        <input type="date" id="rpt-from">
+      </div>
+
+      <div class="rpt-field">
+        <label>To</label>
+        <input type="date" id="rpt-to">
+      </div>
+
+      <button class="btn-generate" onclick="generateReport()">
+        <span class="iconify" data-icon="fluent:document-text-24-regular"></span>
+        Generate Report
+      </button>
+
+      <button class="btn-print" onclick="window.print()">
+        <span class="iconify" data-icon="fluent:print-24-regular"></span>
+        Print / Export PDF
+      </button>
+
+    </div>
+  </div>
+
+  <!-- ── Report document ── -->
+  <div class="rpt-doc" id="rpt-document">
+
+    <!-- Document header -->
+    <div class="rpt-doc-hd">
+      <div>
+        <div class="rpt-doc-hd-title" id="rpt-doc-title">System Summary Report</div>
+        <div class="rpt-doc-hd-sub">HeartGuard — Heart Disease Prediction System</div>
+      </div>
+      <div class="rpt-doc-hd-meta">
+        <span>Generated</span>
+        <strong id="rpt-gen-date"></strong>
+        <span style="margin-top:6px;">Period</span>
+        <strong id="rpt-period">All time</strong>
+      </div>
+    </div>
+
+    <!-- Summary strip — always visible -->
+    <div class="rpt-summary">
+      <div class="rpt-sum-item">
+        <div class="rpt-sum-val">{{ total_diagnoses }}</div>
+        <div class="rpt-sum-lbl">Total Diagnoses</div>
+      </div>
+      <div class="rpt-sum-item">
+        <div class="rpt-sum-val">{{ total_patients }}</div>
+        <div class="rpt-sum-lbl">Total Patients</div>
+      </div>
+      <div class="rpt-sum-item">
+        <div class="rpt-sum-val">{{ positive_cases }}</div>
+        <div class="rpt-sum-lbl">Positive Cases</div>
+      </div>
+      <div class="rpt-sum-item">
+        <div class="rpt-sum-val">{{ total_doctors }}</div>
+        <div class="rpt-sum-lbl">Active Doctors</div>
+      </div>
+    </div>
+
+    <!-- Risk distribution section -->
+    <div id="sec-risk">
+      <div class="rpt-section">
+        <div class="rpt-section-title">
+          <span class="iconify" data-icon="fluent:warning-24-regular"></span>
+          Risk Distribution
+        </div>
+      </div>
+      <div class="rpt-risk-rows">
+        <div class="rpt-risk-row">
+          <span class="rpt-risk-name">High Risk</span>
+          <div class="rpt-risk-bar-wrap"><div class="rpt-risk-bar rb-hi" style="width:{{ high_pct }}%"></div></div>
+          <span class="rpt-risk-pct" style="color:#b91c1c;">{{ high_pct }}%</span>
+          <span class="rpt-risk-cnt">{{ high_count }} cases</span>
+        </div>
+        <div class="rpt-risk-row">
+          <span class="rpt-risk-name">Medium Risk</span>
+          <div class="rpt-risk-bar-wrap"><div class="rpt-risk-bar rb-md" style="width:{{ medium_pct }}%"></div></div>
+          <span class="rpt-risk-pct" style="color:#c2410c;">{{ medium_pct }}%</span>
+          <span class="rpt-risk-cnt">{{ medium_count }} cases</span>
+        </div>
+        <div class="rpt-risk-row">
+          <span class="rpt-risk-name">Low Risk</span>
+          <div class="rpt-risk-bar-wrap"><div class="rpt-risk-bar rb-lo" style="width:{{ low_pct }}%"></div></div>
+          <span class="rpt-risk-pct" style="color:#15803d;">{{ low_pct }}%</span>
+          <span class="rpt-risk-cnt">{{ low_count }} cases</span>
+        </div>
+        <div class="rpt-risk-row" style="margin-top:4px;padding-top:10px;border-top:1px solid #f0f0f0;">
+          <span class="rpt-risk-name" style="color:var(--d-text-3);font-size:10.5px;">Heart disease positive rate</span>
+          <div style="flex:1"></div>
+          <span style="font-size:13px;font-weight:700;color:var(--primary);">{{ pos_rate }}%</span>
+          <span class="rpt-risk-cnt">{{ positive_cases }} / {{ total_diagnoses }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Monthly breakdown section -->
+    <div id="sec-monthly">
+      <div class="rpt-section">
+        <div class="rpt-section-title">
+          <span class="iconify" data-icon="fluent:calendar-month-24-regular"></span>
+          Monthly Breakdown
+        </div>
+      </div>
+      {% if monthly %}
+      <div class="rpt-tbl-wrap">
+        <table class="rpt-tbl">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Total</th>
+              <th>High</th>
+              <th>Medium</th>
+              <th>Low</th>
+              <th>+ve</th>
+              <th>-ve</th>
+              <th>Disease Rate</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in monthly %}
+            <tr>
+              <td>{{ row.label }}</td>
+              <td>{{ row.total }}</td>
+              <td><span class="b b-hi">{{ row.high }}</span></td>
+              <td><span class="b b-md">{{ row.medium }}</span></td>
+              <td><span class="b b-lo">{{ row.low }}</span></td>
+              <td>{{ row.pos }}</td>
+              <td>{{ row.neg }}</td>
+              <td style="font-weight:600;color:var(--primary);">
+                {% if row.total > 0 %}{{ ((row.pos / row.total) * 100) | round(1) }}%{% else %}—{% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td>Total</td>
+              <td>{{ totals.total }}</td>
+              <td>{{ totals.high }}</td>
+              <td>{{ totals.medium }}</td>
+              <td>{{ totals.low }}</td>
+              <td>{{ totals.pos }}</td>
+              <td>{{ totals.neg }}</td>
+              <td style="color:var(--primary);">
+                {% if totals.total > 0 %}{{ ((totals.pos / totals.total) * 100) | round(1) }}%{% else %}—{% endif %}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      {% else %}
+      <div class="rpt-empty">No diagnosis data available yet.</div>
+      {% endif %}
+    </div>
+
+    <!-- Document footer -->
+    <div class="rpt-doc-ft">
+      <span>HeartGuard — Confidential System Report</span>
+      <span id="rpt-ft-date"></span>
+    </div>
+
+  </div><!-- /.rpt-doc -->
+
+</div><!-- /.rpt-layout -->
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const now = new Date();
+  const fmt = d => d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+
+  document.getElementById('rpt-gen-date').textContent = fmt(now);
+  document.getElementById('rpt-ft-date').textContent  = 'Generated: ' + fmt(now);
+
+  /* Default date range: first of current year → today */
+  const toISO = d => d.toISOString().slice(0, 10);
+  document.getElementById('rpt-to').value   = toISO(now);
+  document.getElementById('rpt-from').value = toISO(new Date(now.getFullYear(), 0, 1));
+
+  const titles = {
+    summary: 'System Summary Report',
+    monthly: 'Monthly Breakdown Report',
+    risk:    'Risk Distribution Report',
+    full:    'Full System Report',
+  };
+  const showSec = (risk, monthly) => {
+    document.getElementById('sec-risk').style.display    = risk    ? '' : 'none';
+    document.getElementById('sec-monthly').style.display = monthly ? '' : 'none';
+  };
+
+  window.generateReport = function () {
+    const type  = document.getElementById('rpt-type').value;
+    const from  = document.getElementById('rpt-from').value;
+    const to    = document.getElementById('rpt-to').value;
+
+    document.getElementById('rpt-doc-title').textContent = titles[type] || 'System Report';
+    document.getElementById('rpt-gen-date').textContent  = fmt(new Date());
+    document.getElementById('rpt-ft-date').textContent   = 'Generated: ' + fmt(new Date());
+
+    if (from && to) {
+      const fmtDate = s => new Date(s).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
+      document.getElementById('rpt-period').textContent = fmtDate(from) + ' – ' + fmtDate(to);
+    } else {
+      document.getElementById('rpt-period').textContent = 'All time';
+    }
+
+    if (type === 'summary') { showSec(true,  false); }
+    else if (type === 'monthly') { showSec(false, true); }
+    else if (type === 'risk')    { showSec(true,  false); }
+    else                         { showSec(true,  true); }
+  };
+})();
+</script>
+{% endblock %}

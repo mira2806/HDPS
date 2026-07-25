@@ -1,0 +1,188 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% set active_page = 'doctors' %}
+{% set active_group = 'doctors' %}
+
+{% block title %}Manage Doctors — HeartGuard{% endblock %}
+{% block page_title %}Doctors{% endblock %}
+{% block breadcrumb %}<span>Doctors</span><span class="iconify" data-icon="fluent:chevron-right-12-regular"></span><span>Manage Doctors</span>{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="pg-hd">
+  <div class="pg-hd-left">
+    <h2>Manage Doctors</h2>
+    <p>View, add, and manage all registered medical staff</p>
+  </div>
+  <div class="pg-hd-right">
+    <a class="btn-outline" href="{{ url_for('admin.doctors_export', q=q) }}">
+      <span class="iconify" data-icon="fluent:arrow-download-24-regular"></span> Export CSV
+    </a>
+    <button class="btn-primary" onclick="openAddDoctor()">
+      <span class="iconify" data-icon="fluent:person-add-24-regular"></span> Add Doctor
+    </button>
+  </div>
+</div>
+
+<div class="dash-card">
+
+  <div class="card-hd">
+    <form method="GET" action="{{ url_for('admin.doctors') }}" class="filter-bar" style="margin:0;flex:1;">
+      <div class="filter-search">
+        <span class="iconify filter-search-ico" data-icon="fluent:search-24-regular"></span>
+        <input type="search" name="q" value="{{ q }}" placeholder="Search doctors by name…">
+      </div>
+      <button type="submit" class="btn-primary" style="padding:0 14px;">Search</button>
+    </form>
+  </div>
+
+  <div class="tbl-wrap">
+    <table class="dash-tbl">
+      <thead>
+        <tr>
+          <th>Doctor</th>
+          <th>Specialty</th>
+          <th>Email</th>
+          <th>Patients</th>
+          <th>Diagnoses</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% set av_colors = ['av-t','av-p','av-o','av-b','av-r','av-g'] %}
+        {% for doctor in doctors.items %}
+        <tr>
+          <td>
+            <div class="row-user">
+              <div class="av {{ av_colors[loop.index0 % 6] }}">{{ doctor.user.get_initials() }}</div>
+              <div><div class="rn">{{ doctor.user.full_name }}</div></div>
+            </div>
+          </td>
+          <td>{{ doctor.specialty or '—' }}</td>
+          <td>{{ doctor.user.email }}</td>
+          <td>{{ doctor.patient_count }}</td>
+          <td>{{ doctor.diagnosis_count }}</td>
+          <td><span class="rt">{{ 'Active' if doctor.is_active else 'Inactive' }}</span></td>
+          <td>
+            <div class="act-wrap">
+              <button class="act act-v" title="View" onclick="viewDoctor({{ doctor.id }},'/dashboard')"><span class="iconify" data-icon="fluent:eye-24-regular"></span></button>
+              <button class="act act-e" title="Edit" onclick="editDoctor({{ doctor.id }},'/dashboard')"><span class="iconify" data-icon="fluent:edit-24-regular"></span></button>
+              <button class="act act-d" title="Remove" onclick="deleteDoctor({{ doctor.id }},'{{ doctor.user.full_name }}','/dashboard')"><span class="iconify" data-icon="fluent:delete-24-regular"></span></button>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" style="text-align:center;color:var(--d-text-3);padding:40px;">No doctors registered yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="tbl-footer">
+    <span class="pg-info">
+      Showing {{ ((doctors.page - 1) * doctors.per_page) + 1 }}–{{ [doctors.page * doctors.per_page, doctors.total]|min }} of {{ doctors.total }} doctors
+    </span>
+    <div class="pg-btns">
+      <button class="pg-btn" {% if not doctors.has_prev %}disabled{% endif %}
+        onclick="location.href='{{ url_for('admin.doctors', page=doctors.prev_num, q=q) }}'">
+        <span class="iconify" data-icon="fluent:chevron-left-20-regular"></span>
+      </button>
+      {% for p in doctors.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+        {% if p %}
+          <button class="pg-btn {{ 'active' if p == doctors.page else '' }}"
+            onclick="location.href='{{ url_for('admin.doctors', page=p, q=q) }}'">{{ p }}</button>
+        {% else %}
+          <span style="font-size:11px;color:var(--d-text-3);padding:0 4px;">…</span>
+        {% endif %}
+      {% endfor %}
+      <button class="pg-btn" {% if not doctors.has_next %}disabled{% endif %}
+        onclick="location.href='{{ url_for('admin.doctors', page=doctors.next_num, q=q) }}'">
+        <span class="iconify" data-icon="fluent:chevron-right-20-regular"></span>
+      </button>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-search on typing
+(function(){
+  const input = document.querySelector('.filter-search input[name="q"]');
+  if (!input) return;
+  let timer;
+  input.addEventListener('input', () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      const url = new URL(window.location.href);
+      url.searchParams.set('q', input.value.trim());
+      url.searchParams.set('page', '1');
+      window.location.href = url.toString();
+    }, 400);
+  });
+})();
+
+function openAddDoctor() {
+  const body = `
+    <form id="add-doctor-form" class="f-stack">
+      <div class="detect-grid">
+        <div class="f-field" style="grid-column:1/-1;">
+          <label class="f-label">Full Name <span style="color:#ef4444">*</span></label>
+          <input type="text" class="f-input" name="full_name" placeholder="e.g. Dr. Jane Smith" required style="width:100%;">
+        </div>
+        <div class="f-field">
+          <label class="f-label">Email Address <span style="color:#ef4444">*</span></label>
+          <input type="email" class="f-input" name="email" placeholder="doctor@email.com" required style="width:100%;">
+        </div>
+        <div class="f-field">
+          <label class="f-label">Password <span style="color:#ef4444">*</span></label>
+          <input type="password" class="f-input" name="password" placeholder="Min. 6 characters" required style="width:100%;">
+        </div>
+        <div class="f-field">
+          <label class="f-label">Specialty</label>
+          <input type="text" class="f-input" name="specialty" placeholder="e.g. Cardiologist" style="width:100%;">
+        </div>
+        <div class="f-field">
+          <label class="f-label">Phone</label>
+          <input type="text" class="f-input" name="phone" placeholder="+234 800 000 0000" style="width:100%;">
+        </div>
+      </div>
+      <div id="add-doctor-err" style="display:none;margin-top:10px;padding:9px 13px;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;font-size:12px;color:#b91c1c;"></div>
+    </form>`;
+
+  HGModal.open(
+    `<span class="iconify" data-icon="fluent:person-add-24-filled"></span> Add New Doctor`,
+    body,
+    `<button class="btn-outline" onclick="HGModal.close()">Cancel</button>
+     <button class="btn-primary" id="ad-save-btn" onclick="submitAddDoctor()">
+       <span class="iconify" data-icon="fluent:person-add-24-regular"></span>
+       <span id="ad-save-txt">Add Doctor</span>
+     </button>`
+  );
+}
+
+async function submitAddDoctor() {
+  const form   = document.getElementById('add-doctor-form');
+  const btn    = document.getElementById('ad-save-btn');
+  const btnTxt = document.getElementById('ad-save-txt');
+  const errBox = document.getElementById('add-doctor-err');
+  const fd     = new FormData(form);
+
+  if (!fd.get('full_name').trim() || !fd.get('email').trim() || !fd.get('password').trim()) {
+    errBox.textContent = 'Full name, email and password are required.';
+    errBox.style.display = 'block'; return;
+  }
+
+  btn.disabled = true; btnTxt.textContent = 'Adding…';
+  try {
+    const res  = await fetch('/dashboard/api/doctors/add', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (data.success) { HGModal.close(); location.reload(); }
+    else { errBox.textContent = data.error || 'Something went wrong.'; errBox.style.display = 'block'; }
+  } catch {
+    errBox.textContent = 'Network error. Please try again.'; errBox.style.display = 'block';
+  } finally { btn.disabled = false; btnTxt.textContent = 'Add Doctor'; }
+}
+</script>
+{% endblock %}

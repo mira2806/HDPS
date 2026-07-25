@@ -1,0 +1,296 @@
+/* =============================================================
+   REGISTER.CSS — Register-specific styles (extends login.css)
+   ============================================================= */
+
+/* --- Panel scrollability for taller form content ------------ */
+.register-page .login-form-panel {
+  overflow-y: auto;
+  align-items: flex-start;
+  padding-top: 2.5rem;
+  padding-bottom: 2.5rem;
+}
+
+/* --- Wider form wrapper to fit 2-col grid ------------------- */
+.reg-form-wrapper {
+  max-width: 560px;
+  width: 100%;
+}
+
+/* --- 2-column form grid ------------------------------------- */
+.reg-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 1.25rem;
+  row-gap: 1.25rem;
+  align-items: start;
+}
+
+/* Full-width cells */
+.reg-full {
+  grid-column: 1 / -1;
+}
+
+/* Zero out margin-bottom so row-gap controls spacing */
+.reg-form-grid .field-group {
+  margin-bottom: 0;
+}
+
+/* --- Staggered entrance animation --------------------------- */
+@keyframes regFieldIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reg-field-animate {
+  animation: regFieldIn 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(0.25s + var(--i) * 0.07s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reg-field-animate { animation: none; }
+}
+
+/* --- Role selector tabs ------------------------------------ */
+.role-tabs {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+.role-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(255,255,255,0.22);
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.70);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+.role-tab input[type="radio"] { display: none; }
+.role-tab:has(input:checked) {
+  background: rgba(255,255,255,0.18);
+  border-color: rgba(255,255,255,0.70);
+  color: #ffffff;
+}
+.role-tab:hover {
+  background: rgba(255,255,255,0.13);
+  border-color: rgba(255,255,255,0.45);
+  color: #ffffff;
+}
+
+/* --- Feature list on brand card ----------------------------- */
+.reg-features {
+  list-style: none;
+  margin: 1.5rem 0 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 280px;
+  text-align: left;
+}
+
+.reg-features li {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: color 0.2s ease;
+}
+
+.reg-features li:hover {
+  color: var(--primary);
+}
+
+.reg-features .iconify {
+  font-size: 1.15rem;
+  color: var(--primary);
+  flex-shrink: 0;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reg-features li:hover .iconify {
+  transform: scale(1.2);
+}
+
+/* --- Password strength meter -------------------------------- */
+.reg-strength {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-top: 0;
+  padding: 0 0.25rem;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition:
+    max-height 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity    0.3s ease,
+    margin-top 0.3s ease;
+}
+
+.reg-strength.visible {
+  max-height: 36px;
+  opacity: 1;
+  margin-top: 0.5rem;
+}
+
+.strength-bars {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.s-bar {
+  display: block;
+  width: 24px;
+  height: 4px;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.18);
+  transition: background-color 0.3s ease;
+}
+
+.strength-text {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.65);
+  transition: color 0.3s ease;
+  white-space: nowrap;
+}
+
+/* --- Confirm-password match indicator ----------------------- */
+.reg-match {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0;
+  padding: 0 0.25rem;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition:
+    max-height 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity    0.3s ease,
+    margin-top 0.3s ease;
+}
+
+.reg-match.visible {
+  max-height: 36px;
+  opacity: 1;
+  margin-top: 0.5rem;
+}
+
+.match-icon {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.55);
+  flex-shrink: 0;
+  transition: color 0.25s ease, transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.match-icon.match-ok {
+  color: #22c55e;
+  transform: scale(1.1);
+}
+
+.match-icon.match-fail {
+  color: #ef4444;
+  transform: scale(1.1);
+}
+
+.match-text {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.65);
+  transition: color 0.3s ease;
+}
+
+/* --- Terms label (inline links) ----------------------------- */
+.terms-label {
+  align-items: flex-start !important;
+  line-height: 1.6;
+}
+
+.terms-link {
+  color: rgba(255, 255, 255, 0.92);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.2s ease, text-underline-offset 0.2s ease;
+}
+
+.terms-link:hover {
+  color: #ffffff;
+  text-underline-offset: 3px;
+}
+
+/* --- Form header slight adjustment -------------------------- */
+.register-page .form-header {
+  margin-bottom: 1.75rem;
+}
+
+/* =============================================================
+   RESPONSIVE OVERRIDES
+   ============================================================= */
+
+/* ---- 1100px: narrow the form wrapper slightly -------------- */
+@media (max-width: 1100px) {
+  .reg-form-wrapper {
+    max-width: 480px;
+  }
+}
+
+/* ---- 900px: single-column form grid ----------------------- */
+@media (max-width: 900px) {
+  .reg-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .reg-full {
+    grid-column: 1;
+  }
+  .reg-form-wrapper {
+    max-width: 400px;
+  }
+}
+
+/* ---- 768px: login.css already stacks layout,
+        just ensure form wrapper is full-width ----------------- */
+@media (max-width: 768px) {
+  .reg-form-wrapper {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .register-page .login-form-panel {
+    padding-top: 2rem;
+    padding-bottom: 2.5rem;
+    overflow-y: visible;
+  }
+
+  .reg-features {
+    display: none; /* already stacked — brand card is compact header */
+  }
+}
+
+/* ---- 480px: tighten grid gap on small phones -------------- */
+@media (max-width: 480px) {
+  .reg-form-grid {
+    row-gap: 1rem;
+  }
+}

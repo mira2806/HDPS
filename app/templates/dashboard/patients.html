@@ -1,0 +1,214 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% set active_page = 'patients' %}
+{% set active_group = 'patients' %}
+
+{% block title %}Manage Patients — HeartGuard{% endblock %}
+{% block page_title %}Patients{% endblock %}
+{% block breadcrumb %}<span>Patients</span><span class="iconify" data-icon="fluent:chevron-right-12-regular"></span><span>Manage Patients</span>{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="pg-hd">
+  <div class="pg-hd-left">
+    <h2>Manage Patients</h2>
+    <p>View, add, and manage all registered patients</p>
+  </div>
+  <div class="pg-hd-right">
+    <a class="btn-outline" href="{{ url_for('admin.patients_export', q=q) }}">
+      <span class="iconify" data-icon="fluent:arrow-download-24-regular"></span> Export CSV
+    </a>
+    <button class="btn-primary" onclick="openAddPatient()">
+      <span class="iconify" data-icon="fluent:person-add-24-regular"></span> Add Patient
+    </button>
+  </div>
+</div>
+
+<div class="dash-card">
+
+  <div class="card-hd" style="padding-bottom:12px;">
+    <form method="GET" action="{{ url_for('admin.patients') }}" class="filter-bar" style="margin:0;flex:1;">
+      <div class="filter-search">
+        <span class="iconify filter-search-ico" data-icon="fluent:search-24-regular"></span>
+        <input type="search" name="q" value="{{ q }}" placeholder="Search patients by name…">
+      </div>
+      <button type="submit" class="btn-primary" style="padding:0 14px;">Search</button>
+    </form>
+  </div>
+
+  <div class="tbl-wrap">
+    <table class="dash-tbl">
+      <thead>
+        <tr>
+          <th>Patient</th>
+          <th>Age / Sex</th>
+          <th>Contact</th>
+          <th>Last Visit</th>
+          <th>Risk Level</th>
+          <th>Doctor</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% set av_colors = ['av-t','av-p','av-o','av-b','av-r','av-g'] %}
+        {% for patient in patients.items %}
+        <tr>
+          <td>
+            <div class="row-user">
+              <div class="av {{ av_colors[loop.index0 % 6] }}">{{ patient.user.get_initials() }}</div>
+              <div><div class="rn">{{ patient.user.full_name }}</div></div>
+            </div>
+          </td>
+          <td>{{ patient.age or '—' }} / {{ patient.sex or '—' }}</td>
+          <td>{{ patient.user.email }}</td>
+          <td>{{ patient.last_visit.strftime('%b %d, %Y') if patient.last_visit else '—' }}</td>
+          <td><span class="rt">{{ patient.latest_risk_level }}</span></td>
+          <td>{{ patient.assigned_doctor.user.full_name if patient.assigned_doctor else '—' }}</td>
+          <td>
+            <div class="act-wrap">
+              <button class="act act-v" title="View" onclick="viewPatient({{ patient.id }},'/dashboard')"><span class="iconify" data-icon="fluent:eye-24-regular"></span></button>
+              <button class="act act-e" title="Edit" onclick="editPatient({{ patient.id }},'/dashboard')"><span class="iconify" data-icon="fluent:edit-24-regular"></span></button>
+              <button class="act act-d" title="Delete" onclick="deletePatient({{ patient.id }},'{{ patient.user.full_name }}','/dashboard')"><span class="iconify" data-icon="fluent:delete-24-regular"></span></button>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" style="text-align:center;color:var(--d-text-3);padding:40px;">No patients registered yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="tbl-footer">
+    <span class="pg-info">
+      Showing {{ ((patients.page - 1) * patients.per_page) + 1 }}–{{ [patients.page * patients.per_page, patients.total]|min }} of {{ patients.total }} patients
+    </span>
+    <div class="pg-btns">
+      <button class="pg-btn" {% if not patients.has_prev %}disabled{% endif %}
+        onclick="location.href='{{ url_for('admin.patients', page=patients.prev_num, q=q) }}'">
+        <span class="iconify" data-icon="fluent:chevron-left-20-regular"></span>
+      </button>
+      {% for p in patients.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+        {% if p %}
+          <button class="pg-btn {{ 'active' if p == patients.page else '' }}"
+            onclick="location.href='{{ url_for('admin.patients', page=p, q=q) }}'">{{ p }}</button>
+        {% else %}
+          <span style="font-size:11px;color:var(--d-text-3);padding:0 4px;">…</span>
+        {% endif %}
+      {% endfor %}
+      <button class="pg-btn" {% if not patients.has_next %}disabled{% endif %}
+        onclick="location.href='{{ url_for('admin.patients', page=patients.next_num, q=q) }}'">
+        <span class="iconify" data-icon="fluent:chevron-right-20-regular"></span>
+      </button>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-search on typing
+(function(){
+  const input = document.querySelector('.filter-search input[name="q"]');
+  if (!input) return;
+  let timer;
+  input.addEventListener('input', () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      const url = new URL(window.location.href);
+      url.searchParams.set('q', input.value.trim());
+      url.searchParams.set('page', '1');
+      window.location.href = url.toString();
+    }, 400);
+  });
+})();
+
+const _doctors = [
+  {% for doc in doctors %}
+  { id: {{ doc.id }}, name: "{{ doc.user.full_name }}" }{% if not loop.last %},{% endif %}
+  {% endfor %}
+];
+
+function openAddPatient() {
+  const docOpts = _doctors.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+  const body = `
+    <form id="add-patient-form" class="f-stack">
+      <div class="detect-grid">
+        <div class="f-field" style="grid-column:1/-1;">
+          <label class="f-label">Full Name <span style="color:#ef4444">*</span></label>
+          <input type="text" class="f-input" name="full_name" placeholder="e.g. John Doe" required style="width:100%;">
+        </div>
+        <div class="f-field">
+          <label class="f-label">Email Address <span style="color:#ef4444">*</span></label>
+          <input type="email" class="f-input" name="email" placeholder="patient@email.com" required style="width:100%;">
+        </div>
+        <div class="f-field">
+          <label class="f-label">Password <span style="color:#ef4444">*</span></label>
+          <input type="password" class="f-input" name="password" placeholder="Min. 6 characters" required style="width:100%;">
+        </div>
+        <div class="f-field">
+          <label class="f-label">Age</label>
+          <input type="number" class="f-input" name="age" placeholder="e.g. 45" min="1" max="120" style="width:100%;">
+        </div>
+        <div class="f-field">
+          <label class="f-label">Sex</label>
+          <select class="f-select-field f-input" name="sex" style="width:100%;padding-left:10px;">
+            <option value="">— Select —</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
+        </div>
+        <div class="f-field">
+          <label class="f-label">Phone</label>
+          <input type="text" class="f-input" name="phone" placeholder="+234 800 000 0000" style="width:100%;">
+        </div>
+        <div class="f-field">
+          <label class="f-label">Assign Doctor</label>
+          <select class="f-select-field f-input" name="doctor_id" style="width:100%;padding-left:10px;">
+            <option value="">— Unassigned —</option>${docOpts}
+          </select>
+        </div>
+        <div class="f-field" style="grid-column:1/-1;">
+          <label class="f-label">Address</label>
+          <input type="text" class="f-input" name="address" placeholder="e.g. 12 Health St, Lagos" style="width:100%;">
+        </div>
+      </div>
+      <div id="add-patient-err" style="display:none;margin-top:10px;padding:9px 13px;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;font-size:12px;color:#b91c1c;"></div>
+    </form>`;
+
+  HGModal.open(
+    `<span class="iconify" data-icon="fluent:person-add-24-filled"></span> Add New Patient`,
+    body,
+    `<button class="btn-outline" onclick="HGModal.close()">Cancel</button>
+     <button class="btn-primary" id="ap-save-btn" onclick="submitAddPatient()">
+       <span class="iconify" data-icon="fluent:person-add-24-regular"></span>
+       <span id="ap-save-txt">Add Patient</span>
+     </button>`
+  );
+}
+
+async function submitAddPatient() {
+  const form   = document.getElementById('add-patient-form');
+  const btn    = document.getElementById('ap-save-btn');
+  const btnTxt = document.getElementById('ap-save-txt');
+  const errBox = document.getElementById('add-patient-err');
+  const fd     = new FormData(form);
+
+  if (!fd.get('full_name').trim() || !fd.get('email').trim() || !fd.get('password').trim()) {
+    errBox.textContent = 'Full name, email and password are required.';
+    errBox.style.display = 'block'; return;
+  }
+
+  btn.disabled = true; btnTxt.textContent = 'Adding…';
+  try {
+    const res  = await fetch('/dashboard/api/patients/add', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (data.success) { HGModal.close(); location.reload(); }
+    else { errBox.textContent = data.error || 'Something went wrong.'; errBox.style.display = 'block'; }
+  } catch {
+    errBox.textContent = 'Network error. Please try again.'; errBox.style.display = 'block';
+  } finally { btn.disabled = false; btnTxt.textContent = 'Add Patient'; }
+}
+</script>
+{% endblock %}

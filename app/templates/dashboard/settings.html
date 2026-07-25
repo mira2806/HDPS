@@ -1,0 +1,263 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% set active_page = 'settings' %}
+{% set active_group = '' %}
+
+{% block title %}Account Settings — HeartGuard{% endblock %}
+{% block page_title %}Settings{% endblock %}
+{% block breadcrumb %}<span>Account Settings</span>{% endblock %}
+
+{% block extra_css %}
+<style>
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+@media (max-width: 860px) { .settings-grid { grid-template-columns: 1fr; } }
+
+/* ── Profile avatar upload widget ── */
+.av-upload-wrap {
+  position: relative;
+  width: 96px; height: 96px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.av-upload-wrap:hover .av-upload-overlay { opacity: 1; }
+.av-circle {
+  width: 96px; height: 96px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0E8C7F, #1FB6A6);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 700; color: #fff;
+  overflow: hidden;
+  box-shadow: 0 6px 24px rgba(14,140,127,.32), 0 2px 8px rgba(0,0,0,.12);
+  border: 3px solid #fff;
+}
+.av-circle img {
+  width: 100%; height: 100%;
+  object-fit: cover; border-radius: 50%;
+}
+.av-upload-overlay {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  background: rgba(0,0,0,.45);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 3px;
+  opacity: 0;
+  transition: opacity .2s ease;
+}
+.av-upload-overlay .iconify { font-size: 20px; color: #fff; }
+.av-upload-overlay span { font-size: 9.5px; font-weight: 600; color: #fff; letter-spacing: .03em; }
+.av-upload-ring {
+  position: absolute; inset: -4px;
+  border-radius: 50%;
+  border: 2.5px dashed rgba(14,140,127,.5);
+  pointer-events: none;
+}
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="pg-hd">
+  <div class="pg-hd-left">
+    <h2>Account Settings</h2>
+    <p>Manage your profile and security preferences</p>
+  </div>
+</div>
+
+<!-- Profile banner -->
+<div class="dash-card" style="margin-bottom:18px;">
+  <div class="card-body" style="display:flex;align-items:center;gap:20px;padding:22px;">
+
+    <!-- Clickable avatar upload -->
+    <div class="av-upload-wrap" id="av-wrap" title="Click to change photo">
+      <div class="av-upload-ring"></div>
+      <div class="av-circle" id="av-circle">
+        {% if current_user.avatar %}
+          <img id="av-preview" src="{{ url_for('static', filename='uploads/avatars/' ~ current_user.avatar) }}" alt="avatar">
+        {% else %}
+          <span id="av-initials">{{ current_user.get_initials() }}</span>
+          <img id="av-preview" src="" alt="avatar" style="display:none;">
+        {% endif %}
+      </div>
+      <div class="av-upload-overlay">
+        <span class="iconify" data-icon="fluent:camera-add-24-regular"></span>
+        <span>Change</span>
+      </div>
+    </div>
+    <input type="file" id="av-input" accept="image/png,image/jpeg,image/webp,image/jfif,.jfif" style="display:none;">
+
+    <div>
+      <div style="font-size:17px;font-weight:700;color:var(--d-text);">{{ current_user.full_name }}</div>
+      <div style="font-size:11.5px;color:var(--d-text-3);margin-top:3px;">{{ current_user.email }}</div>
+      <div style="margin-top:8px;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:10px;font-weight:600;padding:3px 9px;border-radius:99px;
+              background:rgba(14,140,127,0.1);color:#0E8C7F;">
+          {{ current_user.role_label() }}
+        </span>
+        <span id="av-status" style="font-size:10px;color:var(--d-text-3);"></span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="settings-grid">
+
+  <!-- Update Profile -->
+  <div class="dash-card">
+    <div class="card-hd">
+      <div>
+        <div class="card-title">
+          <span class="iconify" data-icon="fluent:person-edit-24-regular"
+                style="vertical-align:middle;margin-right:5px;color:#0E8C7F;"></span>
+          Edit Profile
+        </div>
+        <div class="card-sub">Update your name and email address</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('auth.account_settings') }}">
+        <input type="hidden" name="action" value="profile">
+        <div class="f-stack">
+          <div class="f-field">
+            <label class="f-label">Full Name</label>
+            <div class="f-input-wrap">
+              <span class="iconify f-input-ico" data-icon="fluent:person-24-regular"></span>
+              <input type="text" class="f-input" name="full_name"
+                     value="{{ current_user.full_name }}" required
+                     style="width:100%;padding-left:32px;">
+            </div>
+          </div>
+          <div class="f-field">
+            <label class="f-label">Email Address</label>
+            <div class="f-input-wrap">
+              <span class="iconify f-input-ico" data-icon="fluent:mail-24-regular"></span>
+              <input type="email" class="f-input" name="email"
+                     value="{{ current_user.email }}" required
+                     style="width:100%;padding-left:32px;">
+            </div>
+          </div>
+          <div style="text-align:right;margin-top:4px;">
+            <button type="submit" class="btn-primary">
+              <span class="iconify" data-icon="fluent:save-24-regular"></span>
+              Save Profile
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Change Password -->
+  <div class="dash-card">
+    <div class="card-hd">
+      <div>
+        <div class="card-title">
+          <span class="iconify" data-icon="fluent:key-24-regular"
+                style="vertical-align:middle;margin-right:5px;color:#84cc16;"></span>
+          Change Password
+        </div>
+        <div class="card-sub">Update your account password</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('auth.account_settings') }}">
+        <input type="hidden" name="action" value="password">
+        <div class="f-stack">
+          <div class="f-field">
+            <label class="f-label">Current Password</label>
+            <div class="f-input-wrap">
+              <span class="iconify f-input-ico" data-icon="fluent:lock-closed-24-regular"></span>
+              <input type="password" class="f-input" name="current_password" required
+                     placeholder="Enter current password"
+                     style="width:100%;padding-left:32px;">
+            </div>
+          </div>
+          <div class="f-field">
+            <label class="f-label">New Password <span class="f-hint">min 8 characters</span></label>
+            <div class="f-input-wrap">
+              <span class="iconify f-input-ico" data-icon="fluent:key-24-regular"></span>
+              <input type="password" class="f-input" name="new_password" required minlength="8"
+                     placeholder="Enter new password"
+                     style="width:100%;padding-left:32px;">
+            </div>
+          </div>
+          <div class="f-field">
+            <label class="f-label">Confirm New Password</label>
+            <div class="f-input-wrap">
+              <span class="iconify f-input-ico" data-icon="fluent:key-24-regular"></span>
+              <input type="password" class="f-input" name="confirm_password" required minlength="8"
+                     placeholder="Re-enter new password"
+                     style="width:100%;padding-left:32px;">
+            </div>
+          </div>
+          <div style="text-align:right;margin-top:4px;">
+            <button type="submit" class="btn-primary">
+              <span class="iconify" data-icon="fluent:lock-open-24-regular"></span>
+              Update Password
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const avWrap    = document.getElementById('av-wrap');
+  const avInput   = document.getElementById('av-input');
+  const avPreview = document.getElementById('av-preview');
+  const avInitials= document.getElementById('av-initials');
+  const avStatus  = document.getElementById('av-status');
+
+  avWrap.addEventListener('click', () => avInput.click());
+
+  avInput.addEventListener('change', async () => {
+    const file = avInput.files[0];
+    if (!file) return;
+
+    // Instant local preview
+    const reader = new FileReader();
+    reader.onload = e => {
+      avPreview.src = e.target.result;
+      avPreview.style.display = 'block';
+      if (avInitials) avInitials.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+
+    // Upload
+    avStatus.textContent = 'Uploading…';
+    const fd = new FormData();
+    fd.append('avatar', file);
+    try {
+      const res  = await fetch('{{ url_for("auth.upload_avatar") }}', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.success) {
+        avStatus.style.color = '#15803d';
+        avStatus.textContent = 'Photo updated!';
+        // Also update topbar avatar
+        const tbAv   = document.querySelector('.tb-av');
+        const tbDdAv = document.querySelector('.tb-dd-av');
+        [tbAv, tbDdAv].forEach(el => {
+          if (!el) return;
+          el.innerHTML = `<img src="${data.url}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" alt="avatar">`;
+        });
+        setTimeout(() => { avStatus.textContent = ''; }, 3000);
+      } else {
+        avStatus.style.color = '#b91c1c';
+        avStatus.textContent = data.message || 'Upload failed.';
+      }
+    } catch {
+      avStatus.style.color = '#b91c1c';
+      avStatus.textContent = 'Upload failed.';
+    }
+    avInput.value = '';
+  });
+</script>
+{% endblock %}

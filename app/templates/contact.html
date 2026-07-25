@@ -1,0 +1,399 @@
+{% extends "base.html" %}
+{% block title %}Contact Us — HeartGuard{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Contact page ───────────────────────────────── */
+.contact-hero {
+  position: relative;
+  padding: 90px 24px 70px;
+  text-align: center;
+  overflow: hidden;
+  min-height: 320px;
+  display: flex; align-items: center; justify-content: center;
+}
+.contact-hero-bg {
+  position: absolute; inset: 0;
+  background: url("{{ url_for('static', filename='images/contact_hero_img.png') }}") left center / cover no-repeat;
+  z-index: 0;
+}
+.contact-hero-overlay {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.38);
+  z-index: 1;
+}
+.contact-hero-inner {
+  position: relative; z-index: 2;
+  width: 100%;
+}
+.contact-hero-badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
+  border-radius: 99px; padding: 6px 16px;
+  font-size: 12px; font-weight: 600; color: rgba(255,255,255,.9);
+  letter-spacing: .04em; margin-bottom: 22px;
+}
+.contact-hero h1 {
+  font-family: 'Newsreader', serif;
+  font-size: clamp(30px, 5vw, 52px); font-weight: 700;
+  color: #fff; line-height: 1.2; margin-bottom: 14px;
+}
+.contact-hero p {
+  font-size: clamp(14px, 2vw, 16px); color: rgba(255,255,255,.82);
+  max-width: 520px; margin: 0 auto; line-height: 1.7;
+}
+
+/* ── Main section ─── */
+.contact-section { padding: 72px 24px 80px; }
+.contact-container { max-width: 1060px; margin: 0 auto; }
+.contact-grid {
+  display: grid; grid-template-columns: 5fr 4fr; gap: 32px; align-items: start;
+}
+@media(max-width:860px){ .contact-grid { grid-template-columns: 1fr; } }
+
+/* ── Form card ─── */
+.contact-form-card {
+  background: #fff; border: 1px solid #e5e7eb;
+  border-radius: 22px; padding: 36px 32px;
+  box-shadow: 0 4px 24px rgba(0,0,0,.06);
+}
+[data-theme="dark"] .contact-form-card { background: #111; border-color: #1e2e2c; }
+.contact-form-title {
+  font-size: 20px; font-weight: 700; color: #0d1f1d; margin-bottom: 6px;
+}
+[data-theme="dark"] .contact-form-title { color: #e5e7eb; }
+.contact-form-sub { font-size: 13px; color: #6b7280; margin-bottom: 28px; line-height: 1.5; }
+
+.cf-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media(max-width:500px){ .cf-row { grid-template-columns: 1fr; } }
+
+.cf-group { margin-bottom: 16px; }
+.cf-label {
+  display: block; font-size: 12px; font-weight: 600;
+  color: #374151; margin-bottom: 6px; letter-spacing: .02em;
+}
+.cf-label .req { color: #ef4444; }
+[data-theme="dark"] .cf-label { color: #d1d5db; }
+.cf-input-wrap { position: relative; }
+.cf-input-ico {
+  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+  font-size: 15px; width: 16px; height: 16px;
+  color: #9ca3af; pointer-events: none; flex-shrink: 0;
+}
+.cf-input, .cf-textarea {
+  width: 100%; padding: 11px 12px 11px 40px;
+  border: 1.5px solid #e5e7eb; border-radius: 10px;
+  font-size: 13px; color: #0d1f1d; font-family: 'Inter', sans-serif;
+  background: #fff; outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+[data-theme="dark"] .cf-input, [data-theme="dark"] .cf-textarea {
+  background: #1a2e2c; border-color: #1e3530; color: #e5e7eb;
+}
+.cf-input:focus, .cf-textarea:focus {
+  border-color: #0E8C7F;
+  box-shadow: 0 0 0 3px rgba(14,140,127,.12);
+}
+.cf-textarea { padding-top: 12px; padding-bottom: 12px; padding-left: 40px; resize: vertical; min-height: 130px; }
+.cf-textarea-ico { top: 13px; transform: none; }
+.cf-input-plain { padding-left: 12px; }
+.cf-char { font-size: 10.5px; color: #9ca3af; text-align: right; margin-top: 4px; }
+
+.cf-submit {
+  width: 100%; padding: 14px;
+  background: linear-gradient(135deg, #0E8C7F, #1FB6A6);
+  color: #fff; border: none; border-radius: 11px;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: transform .2s, box-shadow .2s;
+  box-shadow: 0 4px 16px rgba(14,140,127,.3);
+  margin-top: 8px;
+}
+.cf-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(14,140,127,.4); }
+.cf-submit:disabled { opacity: .65; cursor: not-allowed; transform: none; }
+
+/* ── Info sidebar ─── */
+.contact-info-stack { display: flex; flex-direction: column; gap: 16px; }
+.contact-info-card {
+  background: #fff; border: none;
+  border-radius: 18px; padding: 22px 20px;
+  display: flex; align-items: flex-start; gap: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.07), 0 1px 4px rgba(0,0,0,.04);
+  transition: transform .2s, box-shadow .2s;
+}
+[data-theme="dark"] .contact-info-card { background: #111; box-shadow: 0 4px 20px rgba(0,0,0,.25); }
+.contact-info-card:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(0,0,0,.11), 0 2px 8px rgba(0,0,0,.05); }
+.contact-info-ico {
+  width: 40px; height: 40px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; color: #111;
+}
+[data-theme="dark"] .contact-info-ico { color: #e5e7eb; }
+.contact-info-title { font-size: 13px; font-weight: 700; color: #0d1f1d; margin-bottom: 3px; }
+[data-theme="dark"] .contact-info-title { color: #e5e7eb; }
+.contact-info-val { font-size: 12.5px; color: #6b7280; line-height: 1.5; }
+[data-theme="dark"] .contact-info-val { color: #9ca3af; }
+.contact-info-val a { color: #0E8C7F; text-decoration: none; }
+.contact-info-val a:hover { text-decoration: underline; }
+
+/* Response time banner */
+.response-banner {
+  background: #fff; border: none;
+  border-radius: 14px; padding: 18px 20px;
+  display: flex; align-items: center; gap: 14px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.07), 0 1px 4px rgba(0,0,0,.04);
+}
+[data-theme="dark"] .response-banner { background: #111; }
+.response-banner .iconify { font-size: 26px; color: #111; flex-shrink: 0; }
+[data-theme="dark"] .response-banner .iconify { color: #e5e7eb; }
+.response-banner-text p:first-child { font-size: 13px; font-weight: 700; color: #0d1f1d; margin-bottom: 2px; }
+[data-theme="dark"] .response-banner-text p:first-child { color: #e5e7eb; }
+.response-banner-text p:last-child { font-size: 11.5px; color: #6b7280; }
+
+/* ── Scroll fade-in ─── */
+.fade-up {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity .65s cubic-bezier(.22,.61,.36,1), transform .65s cubic-bezier(.22,.61,.36,1);
+}
+.fade-up.visible { opacity: 1; transform: translateY(0); }
+.fade-up-d1 { transition-delay: .1s; }
+.fade-up-d2 { transition-delay: .2s; }
+.fade-up-d3 { transition-delay: .3s; }
+.fade-up-d4 { transition-delay: .4s; }
+
+/* Toast */
+#cf-toast {
+  position: fixed; bottom: 32px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #fff; border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.18), 0 2px 8px rgba(0,0,0,.09), 0 0 0 1px rgba(0,0,0,.06);
+  padding: 14px 20px; display: flex; align-items: center; gap: 12px;
+  font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500;
+  color: #0d2420; min-width: 280px; max-width: 420px;
+  z-index: 9999; opacity: 0;
+  transition: opacity .3s ease, transform .3s ease;
+  pointer-events: none;
+}
+#cf-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+#cf-toast .ct-icon { font-size: 20px; flex-shrink: 0; }
+#cf-toast.ct-error .ct-icon { color: #ef4444; }
+#cf-toast.ct-success .ct-icon { color: #15803d; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<section class="contact-hero">
+  <div class="contact-hero-bg"></div>
+  <div class="contact-hero-overlay"></div>
+  <div class="contact-hero-inner">
+    <div class="contact-hero-badge">
+      <span class="iconify" data-icon="fluent:chat-24-regular"></span>
+      Get in Touch
+    </div>
+    <h1>We'd Love to Hear From You</h1>
+    <p>Have a question, feedback, or want to learn more about HeartGuard? Send us a message and we'll get back to you promptly.</p>
+  </div>
+</section>
+
+<!-- Main -->
+<section class="contact-section">
+  <div class="contact-container">
+    <div class="contact-grid">
+
+      <!-- Form -->
+      <div class="contact-form-card fade-up">
+        <div class="contact-form-title">Send a Message</div>
+        <div class="contact-form-sub">Fill in the form below and a member of our team will respond within 24 hours.</div>
+
+        <form id="contact-form" novalidate>
+          <div class="cf-row">
+            <div class="cf-group">
+              <label class="cf-label" for="cf-name">Full Name <span class="req">*</span></label>
+              <div class="cf-input-wrap">
+                <input type="text" id="cf-name" name="name" class="cf-input cf-input-plain"
+                       placeholder="Your full name" required minlength="2">
+              </div>
+            </div>
+            <div class="cf-group">
+              <label class="cf-label" for="cf-email">Email Address <span class="req">*</span></label>
+              <div class="cf-input-wrap">
+                <input type="email" id="cf-email" name="email" class="cf-input cf-input-plain"
+                       placeholder="your@email.com" required>
+              </div>
+            </div>
+          </div>
+
+          <div class="cf-group">
+            <label class="cf-label" for="cf-subject">Subject <span class="req">*</span></label>
+            <div class="cf-input-wrap">
+              <input type="text" id="cf-subject" name="subject" class="cf-input cf-input-plain"
+                     placeholder="What is this regarding?" required>
+            </div>
+          </div>
+
+          <div class="cf-group">
+            <label class="cf-label" for="cf-message">Message <span class="req">*</span></label>
+            <div class="cf-input-wrap">
+              <span class="iconify cf-input-ico cf-textarea-ico" data-icon="fluent:chat-24-regular"></span>
+              <textarea id="cf-message" name="message" class="cf-textarea"
+                        placeholder="Tell us more about your enquiry…" required maxlength="1000"></textarea>
+            </div>
+            <div class="cf-char"><span id="cf-char-count">0</span> / 1000</div>
+          </div>
+
+          <button type="submit" class="cf-submit" id="cf-btn">
+            <span class="iconify" data-icon="fluent:send-24-regular"></span>
+            <span id="cf-btn-text">Send Message</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Info sidebar -->
+      <div class="contact-info-stack">
+
+        <div class="response-banner fade-up fade-up-d1">
+          <span class="iconify" data-icon="fluent:timer-24-regular"></span>
+          <div class="response-banner-text">
+            <p>Fast Response Guaranteed</p>
+            <p>We typically respond to all enquiries within 24 hours on business days.</p>
+          </div>
+        </div>
+
+        <div class="contact-info-card fade-up fade-up-d1">
+          <div class="contact-info-ico">
+            <span class="iconify" data-icon="fluent:mail-24-regular"></span>
+          </div>
+          <div>
+            <div class="contact-info-title">Email Us</div>
+            <div class="contact-info-val">
+              <a href="mailto:salamiameer663@gmail.com">salamiameer663@gmail.com</a><br>
+              We respond to all emails promptly.
+            </div>
+          </div>
+        </div>
+
+        <div class="contact-info-card fade-up fade-up-d2">
+          <div class="contact-info-ico">
+            <span class="iconify" data-icon="fluent:heart-pulse-24-regular"></span>
+          </div>
+          <div>
+            <div class="contact-info-title">About HeartGuard</div>
+            <div class="contact-info-val">
+              A machine-learning powered heart disease prediction platform for healthcare professionals, researchers, and patients.
+            </div>
+          </div>
+        </div>
+
+        <div class="contact-info-card fade-up fade-up-d3">
+          <div class="contact-info-ico">
+            <span class="iconify" data-icon="fluent:info-24-regular"></span>
+          </div>
+          <div>
+            <div class="contact-info-title">Support Hours</div>
+            <div class="contact-info-val">
+              Monday – Friday<br>
+              9:00 AM – 5:00 PM (WAT)<br>
+              <span style="color:#0E8C7F;font-weight:600;">Typically replies within 24h</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="contact-info-card fade-up fade-up-d4">
+          <div class="contact-info-ico">
+            <span class="iconify" data-icon="fluent:person-add-24-regular"></span>
+          </div>
+          <div>
+            <div class="contact-info-title">New to HeartGuard?</div>
+            <div class="contact-info-val">
+              <a href="{{ url_for('auth.register') }}">Create a free account</a> and explore
+              our heart disease prediction tools instantly.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Toast -->
+<div id="cf-toast">
+  <span class="iconify ct-icon" id="ct-icon"></span>
+  <span id="ct-msg"></span>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Scroll fade-in
+const fadeEls = document.querySelectorAll('.fade-up');
+const fadeObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('visible'); fadeObs.unobserve(e.target); }
+  });
+}, { threshold: 0.1 });
+fadeEls.forEach(el => fadeObs.observe(el));
+
+// Character counter
+const msgArea  = document.getElementById('cf-message');
+const charSpan = document.getElementById('cf-char-count');
+msgArea.addEventListener('input', () => { charSpan.textContent = msgArea.value.length; });
+
+// Toast helper
+function showToast(msg, success) {
+  const toast = document.getElementById('cf-toast');
+  const icon  = document.getElementById('ct-icon');
+  const text  = document.getElementById('ct-msg');
+  toast.className = success ? 'show ct-success' : 'show ct-error';
+  icon.setAttribute('data-icon', success ? 'fluent:checkmark-circle-24-filled' : 'fluent:dismiss-circle-24-filled');
+  text.textContent = msg;
+  if (window.Iconify) Iconify.scan(toast);
+  setTimeout(() => { toast.classList.remove('show'); }, 4000);
+}
+
+// Form submit
+document.getElementById('contact-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const btn  = document.getElementById('cf-btn');
+  const txt  = document.getElementById('cf-btn-text');
+
+  // Basic validation
+  const name    = document.getElementById('cf-name').value.trim();
+  const email   = document.getElementById('cf-email').value.trim();
+  const subject = document.getElementById('cf-subject').value.trim();
+  const message = document.getElementById('cf-message').value.trim();
+
+  if (!name || !email || !subject || !message) {
+    showToast('Please fill in all required fields.', false);
+    return;
+  }
+
+  btn.disabled = true;
+  txt.textContent = 'Sending…';
+
+  try {
+    const fd = new FormData(form);
+    const res  = await fetch('/contact/send', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (data.success) {
+      showToast(data.message, true);
+      form.reset();
+      charSpan.textContent = '0';
+    } else {
+      showToast(data.message || 'Something went wrong. Please try again.', false);
+    }
+  } catch {
+    showToast('Network error. Please check your connection and try again.', false);
+  } finally {
+    btn.disabled = false;
+    txt.textContent = 'Send Message';
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}HeartGuard - Heart Disease Detection System{% endblock %}</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/systemLogo.png') }}">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Iconify -->
+  <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/flash.css') }}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body data-theme="light">
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="navbar-container">
+      <!-- Brand -->
+      <div class="navbar-brand">
+        <img src="{{ url_for('static', filename='images/systemLogo.png') }}" alt="HeartGuard" class="navbar-logo-img">
+        <span class="brand-text">HeartGuard</span>
+      </div>
+      
+      <!-- Hamburger Menu (Mobile) -->
+      <button class="hamburger-btn" id="hamburger-btn" aria-label="Toggle menu">
+        <span class="iconify" data-icon="fluent:navigation-24-regular"></span>
+      </button>
+
+      <!-- Navigation Links + Auth Buttons (collapse on mobile) -->
+      <div class="nav-menu" id="nav-menu">
+        <a href="{{ url_for('index') }}" class="nav-link">Home</a>
+        <a href="{{ url_for('about') }}" class="nav-link">About</a>
+        <a href="{{ url_for('contact') }}" class="nav-link">Contact</a>
+        <div class="nav-auth">
+          <a href="{{ url_for('auth.login') }}" class="btn btn-outline">Login</a>
+          <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Register</a>
+        </div>
+      </div>
+
+      <!-- Right Section (Theme Toggle only) -->
+      <div class="navbar-right">
+        <button class="theme-toggle-btn" id="theme-toggle-btn" aria-label="Toggle theme">
+          <span class="iconify theme-icon-light" data-icon="fluent:weather-sunny-24-regular"></span>
+          <span class="iconify theme-icon-dark" data-icon="fluent:weather-moon-24-regular"></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Flash messages -->
+  <div class="flash-container" id="flash-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash-toast flash-{{ category }}" role="alert">
+          <span class="iconify ft-icon" data-icon="{% if category == 'success' %}fluent:checkmark-circle-24-filled{% elif category in ('error','danger') %}fluent:dismiss-circle-24-filled{% elif category == 'warning' %}fluent:shield-warning-24-filled{% else %}fluent:info-24-filled{% endif %}"></span>
+          <span class="ft-body">{{ message }}</span>
+          <button class="ft-close" onclick="this.closest('.flash-toast').classList.add('removing'); setTimeout(()=>this.closest('.flash-toast').remove(),300)" aria-label="Dismiss">&times;</button>
+        </div>
+      {% endfor %}
+    {% endwith %}
+  </div>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <!-- Column 1: Brand & Mission -->
+      <div class="footer-column">
+        <h4 class="footer-title">HeartGuard</h4>
+        <p class="footer-mission">Advancing heart disease detection through machine learning and data-driven insights for research and education.</p>
+        <div class="footer-logo-card">
+          <img src="{{ url_for('static', filename='images/systemLogo.png') }}" alt="HeartGuard Logo" class="footer-logo-img">
+        </div>
+      </div>
+
+      <!-- Column 2: Quick Links -->
+      <div class="footer-column">
+        <h4 class="footer-title">Quick Links</h4>
+        <ul class="footer-links">
+          <li><a href="{{ url_for('index') }}"><span class="iconify" data-icon="fluent:home-24-regular"></span> Home</a></li>
+          <li><a href="{{ url_for('about') }}"><span class="iconify" data-icon="fluent:info-24-regular"></span> About</a></li>
+          <li><a href="{{ url_for('contact') }}"><span class="iconify" data-icon="fluent:chat-24-regular"></span> Contact</a></li>
+          <li><a href="{{ url_for('auth.login') }}"><span class="iconify" data-icon="fluent:sign-in-24-regular"></span> Login</a></li>
+          <li><a href="{{ url_for('auth.register') }}"><span class="iconify" data-icon="fluent:person-add-24-regular"></span> Register</a></li>
+        </ul>
+      </div>
+
+      <!-- Column 3: Resources -->
+      <div class="footer-column">
+        <h4 class="footer-title">Resources</h4>
+        <ul class="footer-links">
+          <li><a href="#docs"><span class="iconify" data-icon="fluent:document-24-regular"></span> Documentation</a></li>
+          <li><a href="#privacy"><span class="iconify" data-icon="fluent:shield-24-regular"></span> Privacy Policy</a></li>
+          <li><a href="#terms"><span class="iconify" data-icon="fluent:clipboard-24-regular"></span> Terms of Service</a></li>
+          <li><a href="#faq"><span class="iconify" data-icon="fluent:question-circle-24-regular"></span> FAQ</a></li>
+          <li><a href="#research"><span class="iconify" data-icon="fluent:beaker-24-regular"></span> Research</a></li>
+        </ul>
+      </div>
+
+      <!-- Column 4: Platform -->
+      <div class="footer-column">
+        <h4 class="footer-title">Platform</h4>
+        <ul class="footer-links">
+          <li><a href="{{ url_for('auth.login') }}"><span class="iconify" data-icon="fluent:heart-pulse-24-regular"></span> Heart Prediction</a></li>
+          <li><a href="{{ url_for('auth.login') }}"><span class="iconify" data-icon="fluent:people-team-24-regular"></span> Doctor Portal</a></li>
+          <li><a href="{{ url_for('auth.login') }}"><span class="iconify" data-icon="fluent:person-24-regular"></span> Patient Portal</a></li>
+          <li><a href="{{ url_for('auth.login') }}"><span class="iconify" data-icon="fluent:settings-24-regular"></span> Admin Dashboard</a></li>
+        </ul>
+      </div>
+
+      <!-- Column 5: Contact Info -->
+      <div class="footer-column">
+        <h4 class="footer-title">Contact</h4>
+        <div class="footer-contact">
+          <p>
+            <span class="iconify footer-contact-icon" data-icon="fluent:mail-24-regular"></span>
+            <a href="mailto:salamiameer663@gmail.com">salamiameer663@gmail.com</a>
+          </p>
+          <p>
+            <span class="iconify footer-contact-icon" data-icon="fluent:clock-24-regular"></span>
+            Mon – Fri, 9AM – 5PM WAT
+          </p>
+          <p>
+            <span class="iconify footer-contact-icon" data-icon="fluent:globe-24-regular"></span>
+            heartguard.ai
+          </p>
+          <p style="margin-top:14px;">
+            <a href="{{ url_for('contact') }}" style="display:inline-flex;align-items:center;gap:6px;background:#0E8C7F;color:#fff;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;">
+              <span class="iconify" data-icon="fluent:send-24-regular"></span> Send a Message
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Bar -->
+    <div class="footer-bottom">
+      <p>&copy; 2026 HeartGuard &mdash; For research and educational use only. Not a medical diagnosis.</p>
+    </div>
+  </footer>
+
+  <!-- Back to Top Button -->
+  <button id="back-to-top-btn" class="back-to-top-btn" aria-label="Back to top">
+    <span class="iconify" data-icon="fluent:arrow-up-24-regular"></span>
+  </button>
+
+  <!-- Main JS -->
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

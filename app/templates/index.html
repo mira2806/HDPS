@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}HeartGuard - Detect Heart Disease Risk Early{% endblock %}
+
+{% block content %}
+
+<!-- Hero Section with Carousel -->
+<section class="hero">
+  <div class="hero-carousel">
+    <!-- Slide 1 -->
+    <div class="carousel-slide active">
+      <!-- REPLACE: hero image 1 -->
+      <img src="{{ url_for('static', filename='images/hero_img_1.png') }}" alt="Medical Analysis">
+    </div>
+    <!-- Slide 2 -->
+    <div class="carousel-slide">
+      <!-- REPLACE: hero image 2 -->
+      <img src="{{ url_for('static', filename='images/hero_img_2.png') }}" alt="Heart Health">
+    </div>
+    <!-- Slide 3 -->
+    <div class="carousel-slide">
+      <!-- REPLACE: hero image 3 -->
+      <img src="{{ url_for('static', filename='images/hero3_img_3.png') }}" alt="Early Detection">
+    </div>
+    <!-- Slide 4 -->
+    <div class="carousel-slide">
+      <!-- REPLACE: hero image 4 -->
+      <img src="{{ url_for('static', filename='images/hero_img_4.png') }}" alt="Heart Health Monitoring">
+    </div>
+    
+    <!-- Carousel Dots -->
+    <div class="carousel-dots">
+      <button class="dot active" data-slide="0" aria-label="Slide 1"></button>
+      <button class="dot" data-slide="1" aria-label="Slide 2"></button>
+      <button class="dot" data-slide="2" aria-label="Slide 3"></button>
+      <button class="dot" data-slide="3" aria-label="Slide 4"></button>
+    </div>
+  </div>
+  
+  <!-- Hero Overlay Content -->
+  <div class="hero-overlay">
+    <div class="hero-content">
+      <h1 class="hero-headline">Detect Heart Disease Risk Early</h1>
+      <p class="hero-subheadline">Harness the power of machine learning and clinical data to understand your cardiovascular health with confidence.</p>
+      <div class="hero-cta">
+        <a href="#check-risk" class="btn btn-primary btn-lg">Check Your Risk</a>
+        <a href="#how-it-works" class="btn btn-secondary btn-lg">Learn More</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section class="features" id="features">
+  <div class="container">
+    <h2 class="section-title">Why Choose HeartGuard?</h2>
+    <div class="features-grid">
+      <!-- Feature 1 -->
+      <div class="feature-card">
+        <span class="iconify feature-icon" data-icon="fluent:brain-circuit-24-regular"></span>
+        <h3>AI-Powered Analysis</h3>
+        <p>Advanced machine learning algorithms trained on clinical datasets to identify risk patterns.</p>
+      </div>
+      
+      <!-- Feature 2 -->
+      <div class="feature-card">
+        <span class="iconify feature-icon" data-icon="fluent:timer-24-regular"></span>
+        <h3>Instant Results</h3>
+        <p>Get your risk assessment in seconds, not days. Real-time insights at your fingertips.</p>
+      </div>
+      
+      <!-- Feature 3 -->
+      <div class="feature-card">
+        <span class="iconify feature-icon" data-icon="fluent:chart-multiple-24-regular"></span>
+        <h3>Clinically Relevant Metrics</h3>
+        <p>Analyze key health indicators including age, blood pressure, cholesterol, and more.</p>
+      </div>
+      
+      <!-- Feature 4 -->
+      <div class="feature-card">
+        <span class="iconify feature-icon" data-icon="fluent:lock-closed-24-regular"></span>
+        <h3>Private & Secure</h3>
+        <p>Your health data is protected with encryption and strict privacy standards. Educational use only.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="how-it-works" id="how-it-works">
+  <div class="container">
+    <h2 class="section-title">How It Works</h2>
+    <div class="steps-grid">
+      <!-- Step 1 -->
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <span class="iconify step-icon" data-icon="fluent:form-24-regular"></span>
+        <h3>Enter Health Data</h3>
+        <p>Input your clinical metrics: age, blood pressure, cholesterol, heart rate, and other relevant factors.</p>
+      </div>
+      
+      <!-- Step 2 -->
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <span class="iconify step-icon" data-icon="fluent:beaker-24-regular"></span>
+        <h3>Model Analyzes</h3>
+        <p>Our trained model processes your data using sophisticated algorithms to identify risk patterns.</p>
+      </div>
+      
+      <!-- Step 3 -->
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <span class="iconify step-icon" data-icon="fluent:checkmark-circle-24-regular"></span>
+        <h3>Get Risk Score</h3>
+        <p>Receive a personalized risk assessment with actionable insights for your health.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats-section">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-item">
+        <p class="stat-number">96.5%</p>
+        <p class="stat-label">Model Accuracy</p>
+      </div>
+      <div class="stat-item">
+        <p class="stat-number">13</p>
+        <p class="stat-label">Features Analyzed</p>
+      </div>
+      <div class="stat-item">
+        <p class="stat-number">&lt;1s</p>
+        <p class="stat-label">Analysis Time</p>
+      </div>
+      <div class="stat-item">
+        <p class="stat-number">10K+</p>
+        <p class="stat-label">Training Samples</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Final CTA Section -->
+<section class="final-cta" id="check-risk">
+  <div class="container">
+    <h2 class="cta-headline">Ready to Check Your Heart Health?</h2>
+    <p class="cta-subheadline">Start your risk assessment today. It only takes a few minutes.</p>
+    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">Get Started Now</a>
+  </div>
+</section>
+
+<!-- Newsletter Section -->
+<section class="newsletter-section">
+  <div class="container">
+    <div class="newsletter-content">
+      <h2 class="newsletter-title">Stay Informed About Heart Health</h2>
+      <p class="newsletter-subtitle">Subscribe to our newsletter for the latest insights, research updates, and health tips delivered to your inbox.</p>
+      <form class="newsletter-form" id="newsletter-form">
+        <div class="form-group newsletter-input-group">
+          <input type="email" id="newsletter-email" placeholder="Enter your email address" required class="newsletter-input">
+          <button type="submit" class="btn btn-primary" id="newsletter-btn">Subscribe</button>
+        </div>
+        <p class="newsletter-disclaimer" id="newsletter-msg">We respect your privacy. Unsubscribe at any time.</p>
+      </form>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Carousel functionality
+  const carousel = document.querySelector('.hero-carousel');
+  const slides = document.querySelectorAll('.carousel-slide');
+  const dots = document.querySelectorAll('.carousel-dots .dot');
+  let currentSlide = 0;
+  const totalSlides = slides.length;
+  const autoAdvanceInterval = 3000; // 3 seconds
+
+  function showSlide(n) {
+    slides.forEach(slide => slide.classList.remove('active'));
+    dots.forEach(dot => dot.classList.remove('active'));
+    
+    slides[n].classList.add('active');
+    dots[n].classList.add('active');
+  }
+
+  function nextSlide() {
+    currentSlide = (currentSlide + 1) % totalSlides;
+    showSlide(currentSlide);
+  }
+
+  // Auto-advance carousel
+  setInterval(nextSlide, autoAdvanceInterval);
+
+  // Manual dot navigation
+  dots.forEach((dot, index) => {
+    dot.addEventListener('click', () => {
+      currentSlide = index;
+      showSlide(currentSlide);
+    });
+  });
+
+  // Fluent-style toast helper
+  function showNewsToast(message, success) {
+    const existing = document.getElementById('news-toast');
+    if (existing) existing.remove();
+    const toast = document.createElement('div');
+    toast.id = 'news-toast';
+    toast.style.cssText = `
+      position:fixed; bottom:32px; left:50%; transform:translateX(-50%) translateY(20px);
+      background:#fff; border-radius:14px;
+      box-shadow:0 8px 32px rgba(0,0,0,0.18),0 2px 8px rgba(0,0,0,0.09),0 0 0 1px rgba(0,0,0,0.06);
+      padding:14px 20px; display:flex; align-items:center; gap:12px;
+      font-family:'Inter',sans-serif; font-size:13px; font-weight:500;
+      color:#0d2420; min-width:280px; max-width:420px;
+      opacity:0; transition:opacity .25s ease, transform .3s cubic-bezier(.34,1.56,.64,1);
+      z-index:99999;
+    `;
+    const ico = success
+      ? `<span style="width:32px;height:32px;border-radius:9px;background:rgba(21,128,61,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:17px;color:#15803d;">✓</span>`
+      : `<span style="width:32px;height:32px;border-radius:9px;background:rgba(185,28,28,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:17px;color:#b91c1c;">✕</span>`;
+    toast.innerHTML = `${ico}<span>${message}</span>`;
+    document.body.appendChild(toast);
+    requestAnimationFrame(() => {
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateX(-50%) translateY(0)';
+    });
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(-50%) translateY(12px)';
+      setTimeout(() => toast.remove(), 350);
+    }, 2500);
+  }
+
+  // Newsletter subscription
+  document.getElementById('newsletter-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const emailInput = document.getElementById('newsletter-email');
+    const email = emailInput.value.trim();
+    const btn   = document.getElementById('newsletter-btn');
+    btn.disabled = true;
+    btn.textContent = 'Subscribing…';
+    try {
+      const fd = new FormData();
+      fd.append('email', email);
+      const res  = await fetch('/subscribe', { method: 'POST', body: fd });
+      const data = await res.json();
+      showNewsToast(data.message, data.success);
+      if (data.success) {
+        emailInput.value = '';
+        btn.textContent = 'Subscribed!';
+      } else {
+        btn.disabled = false;
+        btn.textContent = 'Subscribe';
+      }
+    } catch {
+      showNewsToast('Something went wrong. Please try again.', false);
+      btn.disabled = false;
+      btn.textContent = 'Subscribe';
+    }
+  });
+</script>
+{% endblock %}

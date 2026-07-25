@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account — HeartGuard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/flash.css') }}">
+</head>
+<body data-theme="light">
+
+  <!-- Flash messages -->
+  <div class="flash-container" id="flash-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash-toast flash-{{ category }}" role="alert">
+          <span class="iconify ft-icon" data-icon="{% if category == 'success' %}fluent:checkmark-circle-24-filled{% elif category == 'error' or category == 'danger' %}fluent:dismiss-circle-24-filled{% elif category == 'warning' %}fluent:shield-warning-24-filled{% else %}fluent:info-24-filled{% endif %}"></span>
+          <span class="ft-body">{{ message }}</span>
+          <button class="ft-close" onclick="dismissToast(this)" aria-label="Dismiss">&times;</button>
+        </div>
+      {% endfor %}
+    {% endwith %}
+  </div>
+
+  <!-- Theme toggle -->
+  <button class="login-theme-btn" id="theme-toggle-btn" aria-label="Toggle theme">
+    <span class="iconify theme-icon-light" data-icon="fluent:weather-sunny-24-regular"></span>
+    <span class="iconify theme-icon-dark"  data-icon="fluent:weather-moon-24-regular"></span>
+  </button>
+
+  <div class="login-page register-page">
+
+    <!-- LEFT: BRAND CARD -->
+    <div class="login-brand-card">
+      <div class="brand-deco deco-1"></div>
+      <div class="brand-deco deco-2"></div>
+      <div class="brand-content">
+        <div class="brand-icon-wrap">
+          <img src="{{ url_for('static', filename='images/systemLogo.png') }}" alt="HeartGuard Logo" class="brand-logo-img">
+        </div>
+        <div class="brand-text-group">
+          <h1 class="brand-name">HeartGuard</h1>
+          <p class="brand-tagline">Join thousands monitoring their heart health with AI-powered precision.</p>
+        </div>
+      </div>
+      <a href="{{ url_for('index') }}" class="back-home-link">
+        <span class="iconify" data-icon="fluent:arrow-left-24-regular"></span>
+        Back to Home
+      </a>
+    </div>
+
+    <!-- RIGHT: FORM PANEL -->
+    <div class="login-form-panel reg-panel">
+      <div class="login-form-wrapper reg-form-wrapper">
+
+        <div class="form-header">
+          <h2 class="form-title">Create Account</h2>
+          <p class="form-subtitle">Fill in your details to get started</p>
+        </div>
+
+        <form id="register-form" method="POST" action="{{ url_for('auth.register') }}" novalidate>
+          <div class="reg-form-grid">
+
+            <!-- Role selector -->
+            <div class="reg-full reg-field-animate" style="--i:0">
+              <label class="field-label">Account Type</label>
+              <div class="role-tabs">
+                <label class="role-tab">
+                  <input type="radio" name="role" value="patient" checked>
+                  <span class="iconify" data-icon="fluent:person-24-regular"></span>
+                  Patient
+                </label>
+                <label class="role-tab">
+                  <input type="radio" name="role" value="doctor">
+                  <span class="iconify" data-icon="fluent:stethoscope-24-regular"></span>
+                  Doctor
+                </label>
+                <label class="role-tab">
+                  <input type="radio" name="role" value="admin">
+                  <span class="iconify" data-icon="fluent:shield-person-24-regular"></span>
+                  Admin
+                </label>
+              </div>
+            </div>
+
+            <!-- Full Name -->
+            <div class="field-group reg-field-animate" style="--i:1">
+              <label class="field-label" for="full-name">Full Name</label>
+              <div class="field-input-wrap">
+                <span class="iconify field-icon" data-icon="fluent:person-24-regular"></span>
+                <input type="text" id="full-name" name="full_name" class="field-input"
+                       placeholder="John Doe" autocomplete="name" required>
+              </div>
+            </div>
+
+            <!-- Email -->
+            <div class="field-group reg-field-animate" style="--i:2">
+              <label class="field-label" for="reg-email">Email Address</label>
+              <div class="field-input-wrap">
+                <span class="iconify field-icon" data-icon="fluent:mail-24-regular"></span>
+                <input type="email" id="reg-email" name="email" class="field-input"
+                       placeholder="you@example.com" autocomplete="email" required>
+              </div>
+            </div>
+
+            <!-- Specialty (Doctor only) -->
+            <div class="field-group reg-field-animate reg-full role-field role-doctor" style="--i:3; display:none">
+              <label class="field-label" for="specialty">Specialty</label>
+              <div class="field-input-wrap">
+                <span class="iconify field-icon" data-icon="fluent:stethoscope-24-regular"></span>
+                <select id="specialty" name="specialty" class="field-input">
+                  <option value="General Physician">General Physician</option>
+                  <option value="Cardiologist">Cardiologist</option>
+                  <option value="Internist">Internist</option>
+                  <option value="Surgeon">Surgeon</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Admin code (Admin only) -->
+            <div class="field-group reg-field-animate reg-full role-field role-admin" style="--i:3; display:none">
+              <label class="field-label" for="admin-code">Admin Access Code</label>
+              <div class="field-input-wrap">
+                <span class="iconify field-icon" data-icon="fluent:key-24-regular"></span>
+                <input type="password" id="admin-code" name="admin_code" class="field-input"
+                       placeholder="Enter admin access code">
+              </div>
+            </div>
+
+            <!-- Password -->
+            <div class="field-group reg-field-animate" style="--i:4">
+              <label class="field-label" for="reg-password">Password</label>
+              <div class="field-input-wrap">
+                <span class="iconify field-icon" data-icon="fluent:lock-closed-24-regular"></span>
+                <input type="password" id="reg-password" name="password"
+                       class="field-input has-toggle" placeholder="Min. 8 characters"
+                       autocomplete="new-password" required>
+                <button type="button" class="pwd-toggle" id="pwd-toggle-1" aria-label="Show password">
+                  <span class="iconify" id="pwd-icon-1" data-icon="fluent:eye-24-regular"></span>
+                </button>
+              </div>
+              <div class="reg-strength" id="reg-strength">
+                <div class="strength-bars">
+                  <span class="s-bar"></span><span class="s-bar"></span>
+                  <span class="s-bar"></span><span class="s-bar"></span>
+                </div>
+                <span class="strength-text" id="strength-text">Too short</span>
+              </div>
+            </div>
+
+            <!-- Confirm Password -->
+            <div class="field-group reg-field-animate" style="--i:5">
+              <label class="field-label" for="confirm-pwd">Confirm Password</label>
+              <div class="field-input-wrap">
+                <span class="iconify field-icon" data-icon="fluent:lock-shield-24-regular"></span>
+                <input type="password" id="confirm-pwd" name="confirm_password"
+                       class="field-input has-toggle" placeholder="Repeat your password"
+                       autocomplete="new-password" required>
+                <button type="button" class="pwd-toggle" id="pwd-toggle-2" aria-label="Show password">
+                  <span class="iconify" id="pwd-icon-2" data-icon="fluent:eye-24-regular"></span>
+                </button>
+              </div>
+              <div class="reg-match" id="reg-match">
+                <span class="iconify match-icon" id="match-icon" data-icon="fluent:info-24-regular"></span>
+                <span class="match-text" id="match-text">Must match your password</span>
+              </div>
+            </div>
+
+            <!-- Terms -->
+            <div class="field-group reg-full reg-field-animate" style="--i:6">
+              <label class="remember-label terms-label">
+                <input type="checkbox" id="terms" name="terms" required>
+                <span class="custom-check">
+                  <span class="iconify check-icon" data-icon="fluent:checkmark-12-filled"></span>
+                </span>
+                I agree to the <a href="#" class="terms-link">Terms of Service</a> and
+                <a href="#" class="terms-link">Privacy Policy</a>
+              </label>
+            </div>
+
+            <!-- Submit -->
+            <div class="reg-full reg-field-animate" style="--i:7">
+              <button type="submit" class="btn-signin" id="btn-register">
+                <span class="btn-signin-text">Create Account</span>
+                <span class="iconify" data-icon="fluent:arrow-right-24-regular"></span>
+              </button>
+            </div>
+
+            <!-- Sign in link -->
+            <div class="reg-full reg-field-animate" style="--i:8">
+              <div class="form-divider"><span>Already have an account?</span></div>
+              <a href="{{ url_for('auth.login') }}" class="btn-register">Sign In</a>
+            </div>
+
+          </div>
+        </form>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script>
+    /* ---- Role tabs ---- */
+    document.querySelectorAll('input[name="role"]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        document.querySelectorAll('.role-field').forEach(el => el.style.display = 'none');
+        if (radio.value === 'doctor') document.querySelector('.role-doctor').style.display = '';
+        if (radio.value === 'admin')  document.querySelector('.role-admin').style.display  = '';
+      });
+    });
+
+    /* ---- Password toggles ---- */
+    function setupToggle(inputId, toggleId, iconId) {
+      const input = document.getElementById(inputId);
+      const toggle = document.getElementById(toggleId);
+      const icon  = document.getElementById(iconId);
+      toggle?.addEventListener('click', () => {
+        const show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        icon.setAttribute('data-icon', show ? 'fluent:eye-off-24-regular' : 'fluent:eye-24-regular');
+        toggle.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+      });
+    }
+    setupToggle('reg-password', 'pwd-toggle-1', 'pwd-icon-1');
+    setupToggle('confirm-pwd',  'pwd-toggle-2', 'pwd-icon-2');
+
+    /* ---- Password strength ---- */
+    const pwd1 = document.getElementById('reg-password');
+    const strengthEl = document.getElementById('reg-strength');
+    const strengthBars = document.querySelectorAll('.s-bar');
+    const strengthText = document.getElementById('strength-text');
+    const COLORS = ['#ef4444','#f97316','#eab308','#22c55e'];
+    const LABELS = ['Weak','Fair','Good','Strong'];
+
+    function calcStrength(v) {
+      let s = 0;
+      if (v.length >= 8)          s++;
+      if (/[A-Z]/.test(v))        s++;
+      if (/[0-9]/.test(v))        s++;
+      if (/[^A-Za-z0-9]/.test(v)) s++;
+      return s;
+    }
+    pwd1?.addEventListener('input', () => {
+      const val = pwd1.value, score = calcStrength(val);
+      strengthEl.classList.toggle('visible', val.length > 0);
+      strengthBars.forEach((bar, i) => {
+        bar.style.backgroundColor = i < score ? COLORS[score-1] : '';
+        bar.classList.toggle('active', i < score);
+      });
+      strengthText.textContent = val.length === 0 ? 'Too short' : (LABELS[score-1] ?? 'Too short');
+      strengthText.style.color  = val.length === 0 ? '' : COLORS[score-1];
+      checkMatch();
+    });
+
+    /* ---- Confirm match ---- */
+    const pwd2 = document.getElementById('confirm-pwd');
+    const matchEl = document.getElementById('reg-match');
+    const matchIcon = document.getElementById('match-icon');
+    const matchText = document.getElementById('match-text');
+    function checkMatch() {
+      if (!pwd2.value) { matchEl.classList.remove('visible'); return; }
+      matchEl.classList.add('visible');
+      const ok = pwd1.value === pwd2.value;
+      matchIcon.setAttribute('data-icon', ok ? 'fluent:checkmark-circle-24-regular' : 'fluent:dismiss-circle-24-regular');
+      matchIcon.className = `iconify match-icon ${ok ? 'match-ok' : 'match-fail'}`;
+      matchText.textContent = ok ? 'Passwords match' : 'Passwords do not match';
+      matchText.style.color = ok ? '#22c55e' : '#ef4444';
+    }
+    pwd2?.addEventListener('input', checkMatch);
+
+    /* ---- Submit loading state ---- */
+    document.getElementById('register-form')?.addEventListener('submit', () => {
+      const btn  = document.getElementById('btn-register');
+      const text = btn.querySelector('.btn-signin-text');
+      btn.classList.add('loading');
+      text.textContent = 'Creating account…';
+    });
+
+    /* ---- Flash dismiss ---- */
+    function dismissToast(btn) {
+      const toast = btn.closest('.flash-toast');
+      toast.classList.add('removing');
+      setTimeout(() => toast.remove(), 300);
+    }
+    document.querySelectorAll('.flash-toast').forEach(t => {
+      setTimeout(() => { if (t.isConnected) { t.classList.add('removing'); setTimeout(() => t.remove(), 300); } }, 5000);
+    });
+  </script>
+</body>
+</html>

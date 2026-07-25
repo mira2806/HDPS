@@ -1,0 +1,108 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% set active_page = 'doctor_results' %}
+{% set active_group = 'doctor_detect' %}
+
+{% block title %}My Results — HeartGuard{% endblock %}
+{% block page_title %}My Results{% endblock %}
+{% block breadcrumb %}<span>Doctor</span><span class="iconify" data-icon="fluent:chevron-right-12-regular"></span><span>My Results</span>{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="pg-hd">
+  <div class="pg-hd-left">
+    <h2>Diagnosis Results</h2>
+    <p>Heart disease predictions you have submitted</p>
+  </div>
+  <div class="pg-hd-right">
+    <a href="{{ url_for('doctor.detect') }}" class="btn-primary">
+      <span class="iconify" data-icon="fluent:scan-24-regular"></span> New Diagnosis
+    </a>
+  </div>
+</div>
+
+<div class="dash-card">
+
+  <div class="card-hd">
+    <form method="GET" action="{{ url_for('doctor.results') }}" class="filter-bar" style="margin:0;flex:1;">
+      <div class="filter-search">
+        <span class="iconify filter-search-ico" data-icon="fluent:search-24-regular"></span>
+        <input type="search" name="q" value="{{ q }}" placeholder="Search by patient name…">
+      </div>
+      <button type="submit" class="btn-primary" style="padding:0 14px;">Search</button>
+    </form>
+  </div>
+
+  <div class="tbl-wrap">
+    <table class="dash-tbl">
+      <thead>
+        <tr>
+          <th>Patient</th>
+          <th>Age / Sex</th>
+          <th>Risk Score</th>
+          <th>Risk Level</th>
+          <th>Prediction</th>
+          <th>Date</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% set av_colors = ['av-t','av-p','av-o','av-b','av-r','av-g'] %}
+        {% for d in results.items %}
+        <tr>
+          <td>
+            <div class="row-user">
+              <div class="av {{ av_colors[loop.index0 % 6] }}">{{ d.patient.user.get_initials() }}</div>
+              <div><div class="rn">{{ d.patient.user.full_name }}</div></div>
+            </div>
+          </td>
+          <td>{{ d.age }} / {{ d.sex_label() }}</td>
+          <td>
+            <span style="font-weight:700;color:{% if d.risk_level == 'High' %}#b91c1c{% elif d.risk_level == 'Medium' %}#c2410c{% else %}#15803d{% endif %};">
+              {{ d.risk_score }}%
+            </span>
+          </td>
+          <td><span class="rt">{{ d.risk_level }}</span></td>
+          <td><span class="rt">{{ d.prediction_label() }}</span></td>
+          <td>{{ d.created_at.strftime('%b %d, %Y') }}</td>
+          <td>
+            <div class="act-wrap">
+              <button class="act act-v" title="View" onclick="viewDiagnosis({{ d.id }},'/doctor')"><span class="iconify" data-icon="fluent:eye-24-regular"></span></button>
+              <button class="act act-d" title="Delete" onclick="deleteDiagnosis({{ d.id }},'{{ d.patient.user.full_name }}','/doctor')"><span class="iconify" data-icon="fluent:delete-24-regular"></span></button>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" style="text-align:center;color:var(--d-text-3);padding:40px;">No diagnoses yet. <a href="{{ url_for('doctor.detect') }}" style="color:var(--primary);">Run the first diagnosis</a>.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="tbl-footer">
+    <span class="pg-info">
+      {% if results.total > 0 %}
+      Showing {{ ((results.page - 1) * results.per_page) + 1 }}–{{ [results.page * results.per_page, results.total]|min }} of {{ results.total }} results
+      {% else %}0 results{% endif %}
+    </span>
+    <div class="pg-btns">
+      <button class="pg-btn" {% if not results.has_prev %}disabled{% endif %}
+        onclick="location.href='{{ url_for('doctor.results', page=results.prev_num, q=q) }}'">
+        <span class="iconify" data-icon="fluent:chevron-left-20-regular"></span>
+      </button>
+      {% for p in results.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+        {% if p %}
+          <button class="pg-btn {{ 'active' if p == results.page else '' }}"
+            onclick="location.href='{{ url_for('doctor.results', page=p, q=q) }}'">{{ p }}</button>
+        {% else %}
+          <span style="font-size:11px;color:var(--d-text-3);padding:0 4px;">…</span>
+        {% endif %}
+      {% endfor %}
+      <button class="pg-btn" {% if not results.has_next %}disabled{% endif %}
+        onclick="location.href='{{ url_for('doctor.results', page=results.next_num, q=q) }}'">
+        <span class="iconify" data-icon="fluent:chevron-right-20-regular"></span>
+      </button>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

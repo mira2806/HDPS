@@ -1,0 +1,106 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% set active_page = 'doctor_home' %}
+{% set active_group = '' %}
+
+{% block title %}Doctor Dashboard — HeartGuard{% endblock %}
+{% block page_title %}My Dashboard{% endblock %}
+{% block breadcrumb %}<span>Doctor</span><span class="iconify" data-icon="fluent:chevron-right-12-regular"></span><span>Overview</span>{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="dash-welcome">
+  <div>
+    <p class="welcome-msg">Welcome, {{ current_user.full_name }}</p>
+    <p class="welcome-sub">Here's a summary of your patients and recent diagnoses.</p>
+  </div>
+  <div style="display:flex;gap:10px;flex-shrink:0;">
+    <a href="{{ url_for('doctor.detect') }}" class="btn-primary" style="font-size:12px;">
+      <span class="iconify" data-icon="fluent:scan-24-regular"></span> New Diagnosis
+    </a>
+    <a href="{{ url_for('doctor.patients') }}" class="btn-outline" style="font-size:12px;">
+      <span class="iconify" data-icon="fluent:people-24-regular"></span> My Patients
+    </a>
+  </div>
+</div>
+
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="sc-body">
+      <div class="sc-icon-wrap"><span class="iconify sc-ico" data-icon="fluent:people-24-filled"></span></div>
+      <div class="sc-center">
+        <div class="sc-val">{{ p_count }}</div>
+        <div class="sc-sub">My Patients</div>
+      </div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-body">
+      <div class="sc-icon-wrap"><span class="iconify sc-ico" data-icon="fluent:document-checkmark-24-filled"></span></div>
+      <div class="sc-center">
+        <div class="sc-val">{{ d_count }}</div>
+        <div class="sc-sub">Total Diagnoses</div>
+      </div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-body">
+      <div class="sc-icon-wrap"><span class="iconify sc-ico" data-icon="fluent:calendar-checkmark-24-filled"></span></div>
+      <div class="sc-center">
+        <div class="sc-val">{{ today }}</div>
+        <div class="sc-sub">Today's Diagnoses</div>
+      </div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-body">
+      <div class="sc-icon-wrap"><span class="iconify sc-ico" data-icon="fluent:stethoscope-24-filled"></span></div>
+      <div class="sc-center">
+        <div class="sc-val">{{ doctor.specialty if doctor else '—' }}</div>
+        <div class="sc-sub">Specialty</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="dash-card">
+  <div class="card-hd">
+    <div>
+      <div class="card-title">Recent Diagnoses</div>
+      <div class="card-sub">Latest records from your patients</div>
+    </div>
+    <div class="card-acts">
+      <a href="{{ url_for('doctor.results') }}" class="btn-outline" style="font-size:11px;">View All</a>
+    </div>
+  </div>
+  <div class="tbl-wrap">
+    <table class="dash-tbl">
+      <thead>
+        <tr><th>Patient</th><th>Age / Sex</th><th>Risk Level</th><th>Prediction</th><th>Date</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        {% set av_colors = ['av-t','av-p','av-o','av-b','av-r','av-g'] %}
+        {% for d in recent %}
+        <tr>
+          <td>
+            <div class="row-user">
+              <div class="av {{ av_colors[loop.index0 % 6] }}">{{ d.patient.user.get_initials() }}</div>
+              <div><div class="rn">{{ d.patient.user.full_name }}</div></div>
+            </div>
+          </td>
+          <td>{{ d.age }} / {{ d.sex_label() }}</td>
+          <td><span class="rt">{{ d.risk_level }}</span></td>
+          <td><span class="rt">{{ d.prediction_label() }}</span></td>
+          <td>{{ d.created_at.strftime('%b %d, %Y') }}</td>
+          <td><div class="act-wrap">
+            <button class="act act-v" title="View"><span class="iconify" data-icon="fluent:eye-24-regular"></span></button>
+          </div></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" style="text-align:center;color:var(--d-text-3);padding:32px;">No diagnoses yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

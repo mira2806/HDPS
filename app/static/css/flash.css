@@ -1,0 +1,103 @@
+/* =============================================================
+   FLASH MESSAGES — HeartGuard
+   ============================================================= */
+
+.flash-container {
+  position: fixed;
+  top: 18px;
+  right: 20px;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 380px;
+  width: calc(100vw - 40px);
+  pointer-events: none;
+}
+
+.flash-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 14px 14px 18px;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: #0d2420;
+  background: rgba(255, 255, 255, 0.90);
+  backdrop-filter: blur(20px) saturate(1.8);
+  -webkit-backdrop-filter: blur(20px) saturate(1.8);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 6px 28px rgba(0,0,0,0.12), 0 1px 5px rgba(0,0,0,0.07);
+  pointer-events: all;
+  animation: flashSlideIn 0.32s cubic-bezier(0.22,1,0.36,1) forwards;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.flash-toast.removing {
+  animation: flashSlideOut 0.28s ease forwards;
+}
+
+@keyframes flashSlideIn {
+  from { opacity: 0; transform: translateX(60px) scale(0.96); }
+  to   { opacity: 1; transform: translateX(0)    scale(1);    }
+}
+@keyframes flashSlideOut {
+  from { opacity: 1; transform: translateX(0)    scale(1);    }
+  to   { opacity: 0; transform: translateX(60px) scale(0.96); }
+}
+
+/* Success — lime green background */
+.flash-toast.flash-success {
+  background: rgba(212, 255, 180, 0.92);
+  border-color: rgba(132, 204, 22, 0.35);
+}
+.flash-toast.flash-success .ft-icon { color: #4a7c10; }
+
+/* Error / Danger */
+.flash-toast.flash-error .ft-icon,
+.flash-toast.flash-danger .ft-icon { color: #b91c1c; }
+
+/* Warning — solid red */
+.flash-toast.flash-warning {
+  background: #e02020;
+  border-color: #c01a1a;
+  color: #ffffff;
+}
+.flash-toast.flash-warning .ft-icon { color: #ffffff; }
+.flash-toast.flash-warning .ft-close { color: #ffffff; }
+
+/* Info — lime green */
+.flash-toast.flash-info {
+  background: rgba(212, 255, 180, 0.92);
+  border-color: rgba(132, 204, 22, 0.35);
+}
+.flash-toast.flash-info .ft-icon { color: #4a7c10; }
+
+/* Icon */
+.ft-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Message text */
+.ft-body { flex: 1; }
+
+/* Close button */
+.ft-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  font-size: 15px;
+  opacity: 0.40;
+  color: #0d2420;
+  flex-shrink: 0;
+  line-height: 1;
+  border-radius: 4px;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+.ft-close:hover { opacity: 0.85; background: rgba(0,0,0,0.06); }

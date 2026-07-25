@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Dashboard — HeartGuard{% endblock %}</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/systemLogo.png') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/flash.css') }}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- Flash messages -->
+<div class="flash-container" id="flash-container">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="flash-toast flash-{{ category }}" role="alert">
+        <span class="iconify ft-icon" data-icon="{% if category == 'success' %}fluent:checkmark-circle-24-filled{% elif category in ('error','danger') %}fluent:dismiss-circle-24-filled{% elif category == 'warning' %}fluent:shield-warning-24-filled{% else %}fluent:info-24-filled{% endif %}"></span>
+        <span class="ft-body">{{ message }}</span>
+        <button class="ft-close" onclick="dismissToast(this)" aria-label="Dismiss">&times;</button>
+      </div>
+    {% endfor %}
+  {% endwith %}
+</div>
+
+<div class="dash-shell">
+
+  <div class="sb-overlay" id="sb-overlay"></div>
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="dash-sidebar" id="dash-sidebar">
+
+    <a href="{{ url_for('admin.overview') if current_user.role == 'admin' else url_for('doctor.dashboard') if current_user.role == 'doctor' else url_for('patient.dashboard') }}" class="sb-brand">
+      <img src="{{ url_for('static', filename='images/systemLogo.png') }}" alt="HeartGuard" class="sb-logo">
+      <span class="sb-brand-name">HeartGuard</span>
+    </a>
+
+    <nav class="sb-nav" aria-label="Sidebar navigation">
+
+      {% if current_user.role == 'admin' %}
+        <span class="sb-sec">Main</span>
+
+        <a href="{{ url_for('admin.overview') }}"
+           class="sb-item {{ 'active' if active_page == 'dashboard' else '' }}">
+          <span class="iconify sb-icon" data-icon="fluent:grid-24-regular"></span>
+          <span class="sb-label">Dashboard</span>
+        </a>
+
+        <div class="nav-group {{ 'open' if active_group == 'patients' else '' }}">
+          <button class="sb-item nav-group-btn {{ 'grp-active' if active_group == 'patients' else '' }}">
+            <span class="iconify sb-icon" data-icon="fluent:people-24-regular"></span>
+            <span class="sb-label">Patients</span>
+            <span class="iconify sb-chev" data-icon="fluent:chevron-down-20-regular"></span>
+          </button>
+          <div class="sb-sub">
+            <a href="{{ url_for('admin.patients') }}"
+               class="sb-subitem {{ 'active' if active_page == 'patients' else '' }}">
+              <span class="iconify" data-icon="fluent:person-list-24-regular"></span>
+              Manage Patients
+            </a>
+          </div>
+        </div>
+
+        <div class="nav-group {{ 'open' if active_group == 'doctors' else '' }}">
+          <button class="sb-item nav-group-btn {{ 'grp-active' if active_group == 'doctors' else '' }}">
+            <span class="iconify sb-icon" data-icon="fluent:stethoscope-24-regular"></span>
+            <span class="sb-label">Doctors</span>
+            <span class="iconify sb-chev" data-icon="fluent:chevron-down-20-regular"></span>
+          </button>
+          <div class="sb-sub">
+            <a href="{{ url_for('admin.doctors') }}"
+               class="sb-subitem {{ 'active' if active_page == 'doctors' else '' }}">
+              <span class="iconify" data-icon="fluent:person-edit-24-regular"></span>
+              Manage Doctors
+            </a>
+          </div>
+        </div>
+
+        <div class="nav-group {{ 'open' if active_group == 'detect' else '' }}">
+          <button class="sb-item nav-group-btn {{ 'grp-active' if active_group == 'detect' else '' }}">
+            <span class="iconify sb-icon" data-icon="fluent:heart-pulse-24-regular"></span>
+            <span class="sb-label">Detect Heart Disease</span>
+            <span class="iconify sb-chev" data-icon="fluent:chevron-down-20-regular"></span>
+          </button>
+          <div class="sb-sub">
+            <a href="{{ url_for('admin.detect') }}"
+               class="sb-subitem {{ 'active' if active_page == 'detect' else '' }}">
+              <span class="iconify" data-icon="fluent:scan-24-regular"></span>
+              New Diagnosis
+            </a>
+            <a href="{{ url_for('admin.results') }}"
+               class="sb-subitem {{ 'active' if active_page == 'results' else '' }}">
+              <span class="iconify" data-icon="fluent:document-checkmark-24-regular"></span>
+              Results
+            </a>
+          </div>
+        </div>
+
+        <a href="{{ url_for('admin.analysis') }}"
+           class="sb-item {{ 'active' if active_page == 'analysis' else '' }}">
+          <span class="iconify sb-icon" data-icon="fluent:data-trending-24-regular"></span>
+          <span class="sb-label">Analysis</span>
+        </a>
+
+        <a href="{{ url_for('admin.report') }}"
+           class="sb-item {{ 'active' if active_page == 'report' else '' }}">
+          <span class="iconify sb-icon" data-icon="fluent:document-text-24-regular"></span>
+          <span class="sb-label">Report</span>
+        </a>
+
+        <a href="{{ url_for('admin.messages') }}"
+           class="sb-item {{ 'active' if active_page == 'messages' else '' }}">
+          <span class="iconify sb-icon" data-icon="fluent:mail-24-regular"></span>
+          <span class="sb-label">Messages</span>
+          {% if unread_count > 0 %}
+          <span class="sb-badge">{{ unread_count if unread_count < 100 else '99+' }}</span>
+          {% endif %}
+        </a>
+
+      {% elif current_user.role == 'doctor' %}
+        <span class="sb-sec">Doctor Panel</span>
+
+        <a href="{{ url_for('doctor.dashboard') }}"
+           class="sb-item {{ 'active' if active_page == 'doctor_home' else '' }}">
+          <span class="iconify sb-icon" data-icon="fluent:grid-24-regular"></span>
+          <span class="sb-label">My Dashboard</span>
+        </a>
+
+        <a href="{{ url_for('doctor.patients') }}"
+           class="sb-item {{ 'active' if active_page == 'doctor_patients' else '' }}">
+          <span class="iconify sb-icon" data-icon="fluent:people-24-regular"></span>
+          <span class="sb-label">My Patients</span>
+        </a>
+
+        <div class="nav-group {{ 'open' if active_group == 'doctor_detect' else '' }}">
+          <button class="sb-item nav-group-btn {{ 'grp-active' if active_group == 'doctor_detect' else '' }}">
+            <span class="iconify sb-icon" data-icon="fluent:heart-pulse-24-regular"></span>
+            <span class="sb-label">Detect Heart Disease</span>
+            <span class="iconify sb-chev" data-icon="fluent:chevron-down-20-regular"></span>
+          </button>
+          <div class="sb-sub">
+            <a href="{{ url_for('doctor.detect') }}"
+               class="sb-subitem {{ 'active' if active_page == 'doctor_detect' else '' }}">
+              <span class="iconify" data-icon="fluent:scan-24-regular"></span>
+              New Diagnosis
+            </a>
+            <a href="{{ url_for('doctor.results') }}"
+               class="sb-subitem {{ 'active' if active_page == 'doctor_results' else '' }}">
+              <span class="iconify" data-icon="fluent:document-checkmark-24-regular"></span>
+              My Results
+            </a>
+          </div>
+        </div>
+
+      {% else %}
+        <span class="sb-sec">Patient Panel</span>
+
+        <a href="{{ url_for('patient.dashboard') }}"
+           class="sb-item {{ 'active' if active_page == 'patient_home' else '' }}">
+          <span class="iconify sb-icon" data-icon="fluent:grid-24-regular"></span>
+          <span class="sb-label">My Dashboard</span>
+        </a>
+
+      {% endif %}
+
+    </nav>
+
+    <div class="sb-bottom">
+      <a href="{{ url_for('index') }}" target="_blank" class="sb-item">
+        <span class="iconify sb-icon" data-icon="fluent:globe-24-regular"></span>
+        <span class="sb-label">Visit Website</span>
+        <span class="iconify" data-icon="fluent:open-24-regular" style="font-size:11px;margin-left:auto;opacity:.5;"></span>
+      </a>
+      <a href="{{ url_for('auth.logout') }}" class="sb-item logout">
+        <span class="iconify sb-icon" data-icon="fluent:sign-out-24-regular"></span>
+        <span class="sb-label">Logout</span>
+      </a>
+    </div>
+
+  </aside>
+
+  <!-- ===== BODY ===== -->
+  <div class="dash-body">
+
+    <header class="dash-topbar">
+      <div class="tb-left">
+        <button class="tb-toggle" id="sb-toggle" aria-label="Toggle sidebar">
+          <span class="iconify" data-icon="fluent:navigation-24-regular"></span>
+        </button>
+        <div class="tb-page-info">
+          <h1 class="tb-title">{% block page_title %}Dashboard{% endblock %}</h1>
+          <nav class="tb-crumb" aria-label="breadcrumb">
+            <span>HeartGuard</span>
+            <span class="iconify" data-icon="fluent:chevron-right-12-regular"></span>
+            {% block breadcrumb %}<span>Overview</span>{% endblock %}
+          </nav>
+        </div>
+      </div>
+
+      <div class="tb-right">
+        <div class="tb-search">
+          <span class="iconify tb-search-ico" data-icon="fluent:search-24-regular"></span>
+          <input type="search" id="tb-search-input" placeholder="Search…" aria-label="Search">
+        </div>
+        <button class="tb-ico" aria-label="Notifications" onclick="location.href='{{ url_for('admin.messages') if current_user.role == 'admin' else url_for('auth.account_settings') }}'">
+          <span class="iconify" data-icon="fluent:alert-24-regular"></span>
+          {% if unread_count > 0 %}
+          <span class="tb-badge">{{ unread_count if unread_count < 100 else '99+' }}</span>
+          {% endif %}
+        </button>
+        <a href="{{ url_for('auth.account_settings') }}" class="tb-ico" aria-label="Settings" style="text-decoration:none;">
+          <span class="iconify" data-icon="fluent:settings-24-regular"></span>
+        </a>
+        <div class="tb-profile-wrap">
+          <div class="tb-profile" id="tb-profile-btn">
+            <div class="tb-av">
+              {% if current_user.avatar %}
+                <img src="{{ url_for('static', filename='uploads/avatars/' ~ current_user.avatar) }}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" alt="avatar">
+              {% else %}
+                {{ current_user.get_initials() }}
+              {% endif %}
+            </div>
+            <div class="tb-profile-txt">
+              <span class="tb-pname">{{ current_user.full_name }}</span>
+              <span class="tb-prole">{{ current_user.role_label() }}</span>
+            </div>
+            <span class="iconify tb-chevron" data-icon="fluent:chevron-down-20-regular"></span>
+          </div>
+          <div class="tb-dropdown" id="tb-dropdown">
+            <div class="tb-dd-user">
+              <div class="tb-dd-av">
+                {% if current_user.avatar %}
+                  <img src="{{ url_for('static', filename='uploads/avatars/' ~ current_user.avatar) }}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" alt="avatar">
+                {% else %}
+                  {{ current_user.get_initials() }}
+                {% endif %}
+              </div>
+              <div>
+                <div class="tb-dd-name">{{ current_user.full_name }}</div>
+                <div class="tb-dd-email">{{ current_user.email }}</div>
+              </div>
+            </div>
+            <div class="tb-dd-sep"></div>
+            <a href="{{ url_for('auth.account_settings') }}" class="tb-dd-item">
+              <span class="iconify" data-icon="fluent:person-edit-24-regular"></span>
+              Edit Profile
+            </a>
+            <a href="{{ url_for('auth.account_settings') }}" class="tb-dd-item">
+              <span class="iconify" data-icon="fluent:key-24-regular"></span>
+              Change Password
+            </a>
+            <div class="tb-dd-sep"></div>
+            <a href="{{ url_for('auth.logout') }}" class="tb-dd-item tb-dd-logout">
+              <span class="iconify" data-icon="fluent:sign-out-24-regular"></span>
+              Logout
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="dash-content">
+      {% block dashboard_content %}{% endblock %}
+    </main>
+
+  </div>
+
+</div>
+
+<!-- ===== SHARED MODAL ===== -->
+<div class="hg-overlay" id="hg-overlay">
+  <div class="hg-modal" id="hg-modal" role="dialog" aria-modal="true">
+    <div class="hg-modal-hd">
+      <div class="hg-modal-title" id="hg-modal-title"></div>
+      <button class="hg-modal-x" id="hg-modal-x" aria-label="Close">
+        <span class="iconify" data-icon="fluent:dismiss-24-regular"></span>
+      </button>
+    </div>
+    <div class="hg-modal-body" id="hg-modal-body"></div>
+    <div class="hg-modal-ft" id="hg-modal-ft"></div>
+  </div>
+</div>
+
+<!-- ===== DELETE CONFIRM MODAL ===== -->
+<div class="hg-overlay" id="hg-del-overlay">
+  <div class="hg-modal hg-modal-sm" role="dialog" aria-modal="true">
+    <div class="hg-modal-hd">
+      <div class="hg-modal-title">
+        <span class="iconify" style="color:#b91c1c;" data-icon="fluent:delete-24-filled"></span>
+        Confirm Delete
+      </div>
+      <button class="hg-modal-x" id="hg-del-x" aria-label="Close">
+        <span class="iconify" data-icon="fluent:dismiss-24-regular"></span>
+      </button>
+    </div>
+    <div class="hg-modal-body">
+      <div class="hg-del-icon">
+        <span class="iconify" data-icon="fluent:delete-24-filled"></span>
+      </div>
+      <p class="hg-del-msg" id="hg-del-msg"></p>
+    </div>
+    <div class="hg-modal-ft">
+      <button class="btn-outline" id="hg-del-cancel">Cancel</button>
+      <button class="btn-primary" id="hg-del-confirm"
+              style="background:linear-gradient(135deg,#b91c1c,#ef4444);box-shadow:0 2px 8px rgba(185,28,28,.35);">
+        <span class="iconify" data-icon="fluent:delete-24-regular"></span> Delete
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>
+  function dismissToast(btn) {
+    const t = btn.closest('.flash-toast');
+    t.classList.add('removing');
+    setTimeout(() => t.remove(), 300);
+  }
+  document.querySelectorAll('.flash-toast').forEach(t => {
+    setTimeout(() => { if (t.isConnected) { t.classList.add('removing'); setTimeout(() => t.remove(), 300); } }, 5000);
+  });
+
+  // Profile dropdown toggle
+  const profileBtn = document.getElementById('tb-profile-btn');
+  const dropdown   = document.getElementById('tb-dropdown');
+  if (profileBtn && dropdown) {
+    profileBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdown.classList.toggle('open');
+    });
+    document.addEventListener('click', () => dropdown.classList.remove('open'));
+    dropdown.addEventListener('click', (e) => e.stopPropagation());
+  }
+
+  /* ── Shared modal engine ────────────────────────────────────── */
+  const HGModal = (() => {
+    const overlay = document.getElementById('hg-overlay');
+    const title   = document.getElementById('hg-modal-title');
+    const body    = document.getElementById('hg-modal-body');
+    const ft      = document.getElementById('hg-modal-ft');
+    document.getElementById('hg-modal-x').onclick = close;
+    overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+
+    function open(titleHTML, bodyHTML, footerHTML) {
+      title.innerHTML = titleHTML;
+      body.innerHTML  = bodyHTML;
+      ft.innerHTML    = footerHTML || '';
+      overlay.classList.add('open');
+      if (window.Iconify) Iconify.scan(overlay);
+    }
+    function close() { overlay.classList.remove('open'); }
+    return { open, close };
+  })();
+
+  /* ── Delete confirm modal ───────────────────────────────────── */
+  const HGDelete = (() => {
+    const overlay = document.getElementById('hg-del-overlay');
+    let _cb = null;
+    document.getElementById('hg-del-x').onclick      = close;
+    document.getElementById('hg-del-cancel').onclick  = close;
+    document.getElementById('hg-del-confirm').onclick = () => { if (_cb) _cb(); close(); };
+    overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+
+    function open(msg, onConfirm) {
+      document.getElementById('hg-del-msg').innerHTML = msg;
+      _cb = onConfirm;
+      overlay.classList.add('open');
+      if (window.Iconify) Iconify.scan(overlay);
+    }
+    function close() { overlay.classList.remove('open'); _cb = null; }
+    return { open, close };
+  })();
+
+  /* ── Generic row helpers ────────────────────────────────────── */
+  function detailRow(label, value) {
+    return `<div class="hg-detail-item"><div class="hg-detail-lbl">${label}</div><div class="hg-detail-val">${value || '—'}</div></div>`;
+  }
+  function detailFull(label, value) {
+    return `<div class="hg-detail-item hg-detail-full"><div class="hg-detail-lbl">${label}</div><div class="hg-detail-val">${value || '—'}</div></div>`;
+  }
+
+  /* ── Patient actions ────────────────────────────────────────── */
+  async function viewPatient(id, apiBase) {
+    const d = await fetch(`${apiBase}/api/patients/${id}`).then(r => r.json());
+    const body = `
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--d-border);">
+        <div style="width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,#0E8C7F,#1FB6A6);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;flex-shrink:0;">${d.initials}</div>
+        <div><div style="font-size:14px;font-weight:700;color:var(--d-text);">${d.full_name}</div>
+             <div style="font-size:11px;color:var(--d-text-3);">${d.email}</div></div>
+      </div>
+      <div class="hg-detail-grid">
+        ${detailRow('Age', d.age)}
+        ${detailRow('Sex', d.sex)}
+        ${detailRow('Phone', d.phone)}
+        ${detailRow('Last Visit', d.last_visit)}
+        ${detailRow('Risk Level', d.risk_level)}
+        ${detailRow('Diagnoses', d.diagnosis_count)}
+        ${detailRow('Assigned Doctor', d.doctor_name)}
+        ${detailFull('Address', d.address)}
+      </div>`;
+    HGModal.open(
+      `<span class="iconify" data-icon="fluent:person-24-regular"></span> Patient Details`,
+      body,
+      `<button class="btn-outline" onclick="HGModal.close()">Close</button>`
+    );
+  }
+
+  async function editPatient(id, apiBase) {
+    const d = await fetch(`${apiBase}/api/patients/${id}`).then(r => r.json());
+    const docOpts = d.doctors.map(doc =>
+      `<option value="${doc.id}" ${doc.id == d.doctor_id ? 'selected' : ''}>${doc.name}</option>`
+    ).join('');
+    const body = `
+      <form id="edit-patient-form" class="f-stack">
+        <div class="detect-grid">
+          <div class="f-field">
+            <label class="f-label">Full Name</label>
+            <input type="text" class="f-input" name="full_name" value="${d.full_name}" required style="width:100%;">
+          </div>
+          <div class="f-field">
+            <label class="f-label">Email</label>
+            <input type="email" class="f-input" name="email" value="${d.email}" required style="width:100%;">
+          </div>
+          <div class="f-field">
+            <label class="f-label">Age</label>
+            <input type="number" class="f-input" name="age" value="${d.age || ''}" min="1" max="120" style="width:100%;">
+          </div>
+          <div class="f-field">
+            <label class="f-label">Sex</label>
+            <select class="f-select-field f-input" name="sex" style="width:100%;padding-left:10px;">
+              <option value="">—</option>
+              <option value="Male" ${d.sex === 'Male' ? 'selected' : ''}>Male</option>
+              <option value="Female" ${d.sex === 'Female' ? 'selected' : ''}>Female</option>
+            </select>
+          </div>
+          <div class="f-field">
+            <label class="f-label">Phone</label>
+            <input type="text" class="f-input" name="phone" value="${d.phone || ''}" style="width:100%;">
+          </div>
+          <div class="f-field">
+            <label class="f-label">Assigned Doctor</label>
+            <select class="f-select-field f-input" name="doctor_id" style="width:100%;padding-left:10px;">
+              <option value="">None</option>${docOpts}
+            </select>
+          </div>
+          <div class="f-field hg-detail-full">
+            <label class="f-label">Address</label>
+            <input type="text" class="f-input" name="address" value="${d.address || ''}" style="width:100%;">
+          </div>
+        </div>
+      </form>`;
+    HGModal.open(
+      `<span class="iconify" data-icon="fluent:person-edit-24-regular"></span> Edit Patient`,
+      body,
+      `<button class="btn-outline" onclick="HGModal.close()">Cancel</button>
+       <button class="btn-primary" onclick="submitEditPatient(${id}, '${apiBase}')">
+         <span class="iconify" data-icon="fluent:save-24-regular"></span> Save
+       </button>`
+    );
+  }
+
+  async function submitEditPatient(id, apiBase) {
+    const form = document.getElementById('edit-patient-form');
+    const fd   = new FormData(form);
+    const res  = await fetch(`${apiBase}/api/patients/${id}/update`, { method: 'POST', body: fd });
+    if ((await res.json()).success) { HGModal.close(); location.reload(); }
+  }
+
+  function deletePatient(id, name, apiBase) {
+    HGDelete.open(
+      `Are you sure you want to delete <span class="hg-del-name">${name}</span>?<br>All their diagnoses will also be removed. This cannot be undone.`,
+      async () => {
+        await fetch(`${apiBase}/api/patients/${id}/delete`, { method: 'POST' });
+        location.reload();
+      }
+    );
+  }
+
+  /* ── Doctor actions ─────────────────────────────────────────── */
+  async function viewDoctor(id, apiBase) {
+    const d = await fetch(`${apiBase}/api/doctors/${id}`).then(r => r.json());
+    const body = `
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--d-border);">
+        <div style="width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,#0E8C7F,#1FB6A6);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;flex-shrink:0;">${d.initials}</div>
+        <div><div style="font-size:14px;font-weight:700;color:var(--d-text);">${d.full_name}</div>
+             <div style="font-size:11px;color:var(--d-text-3);">${d.email}</div></div>
+      </div>
+      <div class="hg-detail-grid">
+        ${detailRow('Specialty', d.specialty)}
+        ${detailRow('Phone', d.phone)}
+        ${detailRow('Patients', d.patient_count)}
+        ${detailRow('Diagnoses', d.diagnosis_count)}
+        ${detailRow('Status', d.is_active ? 'Active' : 'Inactive')}
+        ${detailRow('Joined', d.joined)}
+      </div>`;
+    HGModal.open(
+      `<span class="iconify" data-icon="fluent:person-sticker-24-regular"></span> Doctor Details`,
+      body,
+      `<button class="btn-outline" onclick="HGModal.close()">Close</button>`
+    );
+  }
+
+  async function editDoctor(id, apiBase) {
+    const d = await fetch(`${apiBase}/api/doctors/${id}`).then(r => r.json());
+    const body = `
+      <form id="edit-doctor-form" class="f-stack">
+        <div class="detect-grid">
+          <div class="f-field">
+            <label class="f-label">Full Name</label>
+            <input type="text" class="f-input" name="full_name" value="${d.full_name}" required style="width:100%;">
+          </div>
+          <div class="f-field">
+            <label class="f-label">Email</label>
+            <input type="email" class="f-input" name="email" value="${d.email}" required style="width:100%;">
+          </div>
+          <div class="f-field">
+            <label class="f-label">Specialty</label>
+            <input type="text" class="f-input" name="specialty" value="${d.specialty || ''}" style="width:100%;">
+          </div>
+          <div class="f-field">
+            <label class="f-label">Phone</label>
+            <input type="text" class="f-input" name="phone" value="${d.phone || ''}" style="width:100%;">
+          </div>
+          <div class="f-field">
+            <label class="f-label">Status</label>
+            <select class="f-select-field f-input" name="is_active" style="width:100%;padding-left:10px;">
+              <option value="1" ${d.is_active ? 'selected' : ''}>Active</option>
+              <option value="0" ${!d.is_active ? 'selected' : ''}>Inactive</option>
+            </select>
+          </div>
+        </div>
+      </form>`;
+    HGModal.open(
+      `<span class="iconify" data-icon="fluent:person-edit-24-regular"></span> Edit Doctor`,
+      body,
+      `<button class="btn-outline" onclick="HGModal.close()">Cancel</button>
+       <button class="btn-primary" onclick="submitEditDoctor(${id}, '${apiBase}')">
+         <span class="iconify" data-icon="fluent:save-24-regular"></span> Save
+       </button>`
+    );
+  }
+
+  async function submitEditDoctor(id, apiBase) {
+    const form = document.getElementById('edit-doctor-form');
+    const fd   = new FormData(form);
+    const res  = await fetch(`${apiBase}/api/doctors/${id}/update`, { method: 'POST', body: fd });
+    if ((await res.json()).success) { HGModal.close(); location.reload(); }
+  }
+
+  function deleteDoctor(id, name, apiBase) {
+    HGDelete.open(
+      `Are you sure you want to remove <span class="hg-del-name">${name}</span> from the system?<br>This action cannot be undone.`,
+      async () => {
+        await fetch(`${apiBase}/api/doctors/${id}/delete`, { method: 'POST' });
+        location.reload();
+      }
+    );
+  }
+
+  /* ── Diagnosis/Result actions ───────────────────────────────── */
+  async function viewDiagnosis(id, apiBase) {
+    const d = await fetch(`${apiBase}/api/results/${id}`).then(r => r.json());
+    const riskColor = d.risk_level === 'High' ? '#b91c1c' : d.risk_level === 'Medium' ? '#c2410c' : '#15803d';
+    const riskBg    = d.risk_level === 'High' ? 'rgba(185,28,28,.07)' : d.risk_level === 'Medium' ? 'rgba(194,65,12,.07)' : 'rgba(21,128,61,.07)';
+    const riskShadow= d.risk_level === 'High' ? '0 6px 24px rgba(185,28,28,.18), 0 2px 8px rgba(185,28,28,.10)' : d.risk_level === 'Medium' ? '0 6px 24px rgba(194,65,12,.16), 0 2px 8px rgba(194,65,12,.09)' : '0 6px 24px rgba(21,128,61,.16), 0 2px 8px rgba(21,128,61,.09)';
+    const riskIcon  = d.risk_level === 'High' ? 'fluent:heart-broken-24-filled' : d.risk_level === 'Medium' ? 'fluent:pulse-square-24-regular' : 'fluent:heart-checkmark-24-filled';
+    const initials  = d.patient_name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    const body = `
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--d-border);">
+        <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#0E8C7F,#1FB6A6);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;">${initials}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:700;color:var(--d-text);">${d.patient_name}</div>
+          <div style="font-size:10.5px;color:var(--d-text-3);margin-top:2px;">Dr. ${d.doctor_name} &nbsp;·&nbsp; ${d.created_at}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px;padding:16px 18px;border-radius:14px;background:${riskBg};box-shadow:${riskShadow};margin-bottom:18px;">
+        <span class="iconify" style="font-size:32px;color:#111;flex-shrink:0;" data-icon="${riskIcon}"></span>
+        <div>
+          <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:${riskColor};margin-bottom:2px;">${d.risk_level} Risk</div>
+          <div style="font-size:22px;font-weight:800;color:${riskColor};line-height:1;">${d.risk_score}%</div>
+          <div style="font-size:10.5px;color:var(--d-text-2);margin-top:4px;">${d.prediction_label}</div>
+        </div>
+      </div>
+      <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--d-text-3);margin-bottom:10px;padding-left:2px;">Clinical Parameters</div>
+      <div class="hg-detail-grid">
+        ${detailRow('Chest Pain Type', d.cp)}
+        ${detailRow('Max Heart Rate', d.thalach + ' bpm')}
+        ${detailRow('Exercise Angina', d.exang)}
+        ${detailRow('ST Depression', d.oldpeak)}
+        ${detailRow('Major Vessels', d.ca)}
+        ${detailRow('Thalassemia', d.thal)}
+      </div>`;
+    HGModal.open(
+      `<span class="iconify" data-icon="fluent:heart-pulse-24-regular"></span> Diagnosis Record`,
+      body,
+      `<button class="btn-outline" onclick="HGModal.close()">Close</button>`
+    );
+  }
+
+  function deleteDiagnosis(id, name, apiBase) {
+    HGDelete.open(
+      `Are you sure you want to delete the diagnosis record for <span class="hg-del-name">${name}</span>?<br>This action cannot be undone.`,
+      async () => {
+        await fetch(`${apiBase}/api/results/${id}/delete`, { method: 'POST' });
+        location.reload();
+      }
+    );
+  }
+
+
+  // ── Topbar global auto-search ────────────────────────────────
+  (function () {
+    const input = document.getElementById('tb-search-input');
+    if (!input) return;
+
+    // Map path segments to searchable route URLs
+    const path = window.location.pathname;
+    let targetUrl = null;
+    if      (path.includes('/patients'))  targetUrl = '/dashboard/patients';
+    else if (path.includes('/doctors'))   targetUrl = '/dashboard/doctors';
+    else if (path.includes('/results'))   targetUrl = '/dashboard/results';
+    else if (path.includes('/overview'))  targetUrl = '/dashboard/overview';
+
+    // Pre-fill with current q param if on a searchable page
+    if (targetUrl) {
+      const cur = new URLSearchParams(window.location.search).get('q') || '';
+      input.value = cur;
+    }
+
+    let timer;
+    input.addEventListener('input', () => {
+      if (!targetUrl) return;
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        const url = new URL(targetUrl, window.location.origin);
+        url.searchParams.set('q', input.value.trim());
+        url.searchParams.set('page', '1');
+        window.location.href = url.toString();
+      }, 400);
+    });
+
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && targetUrl) {
+        clearTimeout(timer);
+        const url = new URL(targetUrl, window.location.origin);
+        url.searchParams.set('q', input.value.trim());
+        url.searchParams.set('page', '1');
+        window.location.href = url.toString();
+      }
+    });
+  })();
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

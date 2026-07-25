@@ -1,0 +1,448 @@
+{% extends "base.html" %}
+{% block title %}About — HeartGuard{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── About page ─────────────────────────────────── */
+.about-hero {
+  position: relative;
+  min-height: 340px;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  padding: 60px 24px 50px;
+  text-align: center;
+}
+.about-hero-bg {
+  position: absolute; inset: 0;
+  background: url("{{ url_for('static', filename='images/about_hero_img.png') }}") left center / cover no-repeat;
+  z-index: 0;
+}
+.about-hero-glass {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.38);
+  z-index: 1;
+}
+.about-hero-content {
+  position: relative; z-index: 2;
+  max-width: 760px; margin: 0 auto;
+}
+.about-hero h1 {
+  font-family: 'Newsreader', serif;
+  font-size: clamp(32px, 6vw, 58px);
+  font-weight: 700; color: #fff; line-height: 1.15;
+  margin-bottom: 18px;
+}
+.about-hero p {
+  font-size: clamp(14px, 2vw, 17px); color: rgba(255,255,255,.82);
+  max-width: 580px; margin: 0 auto; line-height: 1.7;
+}
+.hero-scroll-hint {
+  margin-top: 40px; display: flex; align-items: center;
+  justify-content: center; gap: 8px;
+  font-size: 11px; color: rgba(255,255,255,.6); letter-spacing: .06em; text-transform: uppercase;
+  animation: bounce 2s infinite;
+}
+@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(6px)} }
+
+/* ── Stats strip ─── */
+.about-stats {
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0;
+}
+[data-theme="dark"] .about-stats { background: #111; border-color: #1e2e2c; }
+.about-stats-inner {
+  max-width: 960px; margin: 0 auto;
+  display: grid; grid-template-columns: repeat(4, 1fr);
+}
+@media(max-width:640px){ .about-stats-inner { grid-template-columns: repeat(2,1fr); } }
+.about-stat {
+  padding: 36px 24px; text-align: center;
+  border-right: 1px solid #e5e7eb;
+  position: relative;
+}
+[data-theme="dark"] .about-stat { border-color: #1e2e2c; }
+.about-stat:last-child { border-right: none; }
+.about-stat-num {
+  font-size: 38px; font-weight: 800;
+  color: #0E8C7F;
+  line-height: 1;
+}
+.about-stat-lbl { font-size: 12px; color: #6b7280; margin-top: 6px; font-weight: 500; }
+[data-theme="dark"] .about-stat-lbl { color: #9ca3af; }
+
+/* ── Sections shared ─── */
+.about-section { padding: 80px 24px; }
+.about-section.bg-alt { background: #f8fffe; }
+[data-theme="dark"] .about-section.bg-alt { background: #0d1f1c; }
+.about-container { max-width: 1060px; margin: 0 auto; }
+.section-eyebrow {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .1em; color: #0E8C7F; margin-bottom: 10px;
+}
+.section-heading {
+  font-family: 'Newsreader', serif;
+  font-size: clamp(26px, 4vw, 40px); font-weight: 700;
+  color: #0d1f1d; line-height: 1.25; margin-bottom: 16px;
+}
+[data-theme="dark"] .section-heading { color: #e5e7eb; }
+.section-body {
+  font-size: 15px; color: #4b5563; line-height: 1.75; max-width: 660px;
+}
+[data-theme="dark"] .section-body { color: #9ca3af; }
+
+/* ── Mission split ─── */
+.mission-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;
+}
+@media(max-width:760px){ .mission-grid { grid-template-columns: 1fr; gap:40px; } }
+.mission-visual {
+  border-radius: 24px;
+  aspect-ratio: 1; position: relative; overflow: hidden;
+  box-shadow: 0 16px 48px rgba(0,0,0,.18);
+}
+.mv-slide {
+  position: absolute; inset: 0;
+  background-size: cover; background-position: center;
+  opacity: 0;
+  transition: opacity .9s ease, transform 1.2s ease;
+  transform: scale(1.04);
+}
+.mv-slide.active {
+  opacity: 1;
+  transform: scale(1);
+}
+.mission-visual:hover .mv-slide.active {
+  transform: scale(1.06);
+}
+.mission-visual:hover .mv-slide {
+  transition: opacity .9s ease, transform .6s ease;
+}
+.mv-s1 { background-image: url("{{ url_for('static', filename='images/hero_img_1.png') }}"); background-position: center 15%; }
+.mv-s2 { background-image: url("{{ url_for('static', filename='images/hero_img_2.png') }}"); background-position: center 15%; }
+.mv-s3 { background-image: url("{{ url_for('static', filename='images/hero_img_4.png') }}"); background-position: center 15%; }
+.mission-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+.mission-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: transparent; border: 1px solid #d1d5db;
+  border-radius: 99px; padding: 5px 12px;
+  font-size: 11.5px; font-weight: 600; color: #374151;
+}
+.mission-pill .iconify { color: #111; }
+
+/* ── Feature cards ─── */
+.about-feat-grid {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 20px;
+  margin-top: 48px;
+}
+@media(max-width:900px){ .about-feat-grid { grid-template-columns: repeat(2,1fr); } }
+@media(max-width:560px){ .about-feat-grid { grid-template-columns: 1fr; } }
+.about-feat-card {
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: none;
+  border-radius: 18px; padding: 28px 24px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.08), 0 2px 8px rgba(0,0,0,.04);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+[data-theme="dark"] .about-feat-card {
+  background: rgba(17,30,28,0.72);
+  box-shadow: 0 8px 32px rgba(0,0,0,.3), 0 2px 8px rgba(0,0,0,.15);
+}
+.about-feat-card:hover { transform: translateY(-4px); box-shadow: 0 20px 48px rgba(14,140,127,.15), 0 4px 12px rgba(0,0,0,.06); }
+.about-feat-ico {
+  width: 48px; height: 48px; border-radius: 13px;
+  background: transparent;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; color: #0E8C7F; margin-bottom: 16px;
+}
+.about-feat-card h3 { font-size: 15px; font-weight: 700; color: #0d1f1d; margin-bottom: 8px; }
+[data-theme="dark"] .about-feat-card h3 { color: #e5e7eb; }
+.about-feat-card p { font-size: 13px; color: #6b7280; line-height: 1.65; }
+[data-theme="dark"] .about-feat-card p { color: #9ca3af; }
+
+/* ── Tech stack ─── */
+.tech-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px;
+  margin-top: 40px;
+}
+.tech-card {
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 14px;
+  padding: 20px 16px; text-align: center;
+  transition: transform .2s, box-shadow .2s;
+}
+[data-theme="dark"] .tech-card { background: #111; border-color: #1e2e2c; }
+.tech-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,.08); }
+.tech-card .iconify { font-size: 32px; color: #0E8C7F; margin-bottom: 8px; }
+.tech-card-name { font-size: 13px; font-weight: 700; color: #0d1f1d; }
+[data-theme="dark"] .tech-card-name { color: #e5e7eb; }
+.tech-card-role { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+
+/* ── CTA ─── */
+.about-cta {
+  background: #0E8C7F;
+  border-radius: 24px; padding: 64px 40px; text-align: center;
+  position: relative; overflow: hidden;
+  margin: 0 24px 80px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.35), 0 4px 16px rgba(0,0,0,.2);
+}
+.about-cta::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 40% at 50% -10%, rgba(100,200,60,.08), transparent);
+  pointer-events: none;
+}
+.about-cta h2 {
+  font-family: 'Newsreader', serif;
+  font-size: clamp(24px, 4vw, 38px); font-weight: 700; color: #fff;
+  margin-bottom: 12px; position: relative; z-index: 1;
+}
+.about-cta p { font-size: 15px; color: rgba(255,255,255,.65); margin-bottom: 32px; position: relative; z-index: 1; }
+.about-cta-btns { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; position: relative; z-index: 1; }
+.btn-white {
+  background: #fff; color: #0E8C7F; border: none;
+  padding: 13px 28px; border-radius: 10px; font-size: 14px; font-weight: 700;
+  text-decoration: none; transition: transform .2s, box-shadow .2s;
+  display: inline-flex; align-items: center; gap: 7px;
+}
+.btn-white:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0,0,0,.28); }
+.btn-ghost-white {
+  background: rgba(255,255,255,.07); color: rgba(255,255,255,.85);
+  border: 1.5px solid rgba(255,255,255,.18);
+  padding: 13px 28px; border-radius: 10px; font-size: 14px; font-weight: 600;
+  text-decoration: none; transition: background .2s, border-color .2s;
+  display: inline-flex; align-items: center; gap: 7px;
+}
+.btn-ghost-white:hover { background: rgba(255,255,255,.13); border-color: rgba(255,255,255,.3); }
+
+/* ── Scroll fade-in ─── */
+.fade-up {
+  opacity: 0;
+  transform: translateY(36px);
+  transition: opacity .7s cubic-bezier(.22,.61,.36,1), transform .7s cubic-bezier(.22,.61,.36,1);
+}
+.fade-up.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.fade-up-delay-1 { transition-delay: .1s; }
+.fade-up-delay-2 { transition-delay: .2s; }
+.fade-up-delay-3 { transition-delay: .3s; }
+.fade-up-delay-4 { transition-delay: .4s; }
+.fade-up-delay-5 { transition-delay: .5s; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<section class="about-hero">
+  <div class="about-hero-bg"></div>
+  <div class="about-hero-glass"></div>
+  <div class="about-hero-content">
+    <h1>Advancing Heart Health Through Intelligent Technology</h1>
+    <p>HeartGuard is a clinically-informed heart disease prediction platform powered by machine learning designed to support early detection, research, and better patient outcomes.</p>
+    <div class="hero-scroll-hint">
+      <span class="iconify" data-icon="fluent:arrow-down-24-regular"></span>
+      Scroll to explore
+    </div>
+  </div>
+</section>
+
+<!-- Stats strip -->
+<div class="about-stats fade-up">
+  <div class="about-stats-inner">
+    <div class="about-stat">
+      <div class="about-stat-num" data-count="965">0</div>
+      <div class="about-stat-lbl">Model Accuracy (‰)</div>
+    </div>
+    <div class="about-stat">
+      <div class="about-stat-num" data-count="13">0</div>
+      <div class="about-stat-lbl">Clinical Features Analyzed</div>
+    </div>
+    <div class="about-stat">
+      <div class="about-stat-num" data-count="10000">0</div>
+      <div class="about-stat-lbl">Training Data Points</div>
+    </div>
+    <div class="about-stat">
+      <div class="about-stat-num" data-count="1">0</div>
+      <div class="about-stat-lbl">Second Analysis Time</div>
+    </div>
+  </div>
+</div>
+
+<!-- Mission -->
+<section class="about-section">
+  <div class="about-container">
+    <div class="mission-grid">
+      <div class="fade-up">
+        <div class="section-eyebrow">Our Mission</div>
+        <h2 class="section-heading">Empowering Earlier, Smarter Heart Health Decisions</h2>
+        <p class="section-body">
+          Cardiovascular disease is the world's leading cause of death, yet many cases are preventable with early detection. HeartGuard bridges the gap between complex clinical data and actionable health insights making sophisticated risk prediction accessible to healthcare professionals, researchers, and patients alike.
+        </p>
+        <p class="section-body" style="margin-top:14px;">
+          Built on a foundation of rigorous machine learning and validated clinical data, our system analyzes 13 key physiological metrics to generate a personalized risk score in under a second.
+        </p>
+        <div class="mission-pills" style="margin-top:20px;">
+          <span class="mission-pill"><span class="iconify" data-icon="fluent:checkmark-circle-24-filled"></span> Evidence-Based</span>
+          <span class="mission-pill"><span class="iconify" data-icon="fluent:shield-checkmark-24-regular"></span> Privacy-First</span>
+          <span class="mission-pill"><span class="iconify" data-icon="fluent:brain-circuit-24-regular"></span> AI-Powered</span>
+          <span class="mission-pill"><span class="iconify" data-icon="fluent:people-24-regular"></span> Multi-Role</span>
+        </div>
+      </div>
+      <div class="mission-visual fade-up fade-up-delay-2" id="mv-carousel">
+        <div class="mv-slide mv-s1 active"></div>
+        <div class="mv-slide mv-s2"></div>
+        <div class="mv-slide mv-s3"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="about-section bg-alt">
+  <div class="about-container">
+    <div class="section-eyebrow fade-up">What We Offer</div>
+    <h2 class="section-heading fade-up fade-up-delay-1">Built for Every Stakeholder in Heart Health</h2>
+    <p class="section-body fade-up fade-up-delay-2">From front-line clinicians to research teams, HeartGuard is designed to serve the full spectrum of cardiovascular health needs.</p>
+    <div class="about-feat-grid">
+      <div class="about-feat-card fade-up fade-up-delay-1">
+        <div class="about-feat-ico"><span class="iconify" data-icon="fluent:brain-circuit-24-regular"></span></div>
+        <h3>AI Risk Prediction</h3>
+        <p>A trained Random Forest model analyzes 13 clinical features to compute a precise heart disease risk score in real-time.</p>
+      </div>
+      <div class="about-feat-card fade-up fade-up-delay-2">
+        <div class="about-feat-ico"><span class="iconify" data-icon="fluent:people-team-24-regular"></span></div>
+        <h3>Multi-Role Dashboard</h3>
+        <p>Separate, purpose-built dashboards for Administrators, Doctors, and Patients — each with the right tools and data access.</p>
+      </div>
+      <div class="about-feat-card fade-up fade-up-delay-3">
+        <div class="about-feat-ico"><span class="iconify" data-icon="fluent:chart-multiple-24-regular"></span></div>
+        <h3>Analytical Insights</h3>
+        <p>Deep-dive analytics on patient populations, risk distributions, and prediction trends to support data-driven clinical decisions.</p>
+      </div>
+      <div class="about-feat-card fade-up fade-up-delay-1">
+        <div class="about-feat-ico"><span class="iconify" data-icon="fluent:lock-closed-24-regular"></span></div>
+        <h3>Secure by Design</h3>
+        <p>Role-based access control, encrypted sessions, and strict data separation ensure patient information stays protected.</p>
+      </div>
+      <div class="about-feat-card fade-up fade-up-delay-2">
+        <div class="about-feat-ico"><span class="iconify" data-icon="fluent:arrow-trending-24-regular"></span></div>
+        <h3>Progress Tracking</h3>
+        <p>Monitor patient risk trajectories over time with historical records, trend charts, and exportable reports.</p>
+      </div>
+      <div class="about-feat-card fade-up fade-up-delay-3">
+        <div class="about-feat-ico"><span class="iconify" data-icon="fluent:document-text-24-regular"></span></div>
+        <h3>Detailed Reports</h3>
+        <p>Generate comprehensive clinical reports with full diagnosis histories, risk breakdowns, and exportable CSV data.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Technology Stack -->
+<section class="about-section">
+  <div class="about-container">
+    <div class="section-eyebrow fade-up">Technology</div>
+    <h2 class="section-heading fade-up fade-up-delay-1">Built on a Modern, Reliable Stack</h2>
+    <p class="section-body fade-up fade-up-delay-2">Every component of HeartGuard is chosen for reliability, performance, and clinical suitability.</p>
+    <div class="tech-grid">
+      <div class="tech-card fade-up fade-up-delay-1">
+        <span class="iconify" data-icon="fluent:brain-circuit-24-regular"></span>
+        <div class="tech-card-name">scikit-learn</div>
+        <div class="tech-card-role">ML Model</div>
+      </div>
+      <div class="tech-card fade-up fade-up-delay-2">
+        <span class="iconify" data-icon="fluent:code-24-regular"></span>
+        <div class="tech-card-name">Python / Flask</div>
+        <div class="tech-card-role">Backend API</div>
+      </div>
+      <div class="tech-card fade-up fade-up-delay-3">
+        <span class="iconify" data-icon="fluent:database-24-regular"></span>
+        <div class="tech-card-name">SQLite / SQLAlchemy</div>
+        <div class="tech-card-role">Data Layer</div>
+      </div>
+      <div class="tech-card fade-up fade-up-delay-1">
+        <span class="iconify" data-icon="fluent:design-ideas-24-regular"></span>
+        <div class="tech-card-name">Fluent UI Icons</div>
+        <div class="tech-card-role">Design System</div>
+      </div>
+      <div class="tech-card fade-up fade-up-delay-2">
+        <span class="iconify" data-icon="fluent:shield-checkmark-24-regular"></span>
+        <div class="tech-card-name">Flask-Login</div>
+        <div class="tech-card-role">Auth & Sessions</div>
+      </div>
+      <div class="tech-card fade-up fade-up-delay-3">
+        <span class="iconify" data-icon="fluent:mail-24-regular"></span>
+        <div class="tech-card-name">Flask-Mail</div>
+        <div class="tech-card-role">Notifications</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="about-cta fade-up">
+  <h2>Ready to Experience HeartGuard?</h2>
+  <p>Join healthcare professionals and researchers already using our platform to improve patient outcomes.</p>
+  <div class="about-cta-btns">
+    <a href="{{ url_for('auth.register') }}" class="btn-white">
+      <span class="iconify" data-icon="fluent:person-add-24-regular"></span> Get Started Free
+    </a>
+    <a href="{{ url_for('contact') }}" class="btn-ghost-white">
+      <span class="iconify" data-icon="fluent:chat-24-regular"></span> Contact Us
+    </a>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Animated counter
+const counters = document.querySelectorAll('[data-count]');
+const targets  = { 965: '96.5%', 13: '13', 10000: '10K+', 1: '<1s' };
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (!entry.isIntersecting) return;
+    const el  = entry.target;
+    const end = parseInt(el.dataset.count);
+    const label = targets[end] || end;
+    let start = 0;
+    const step = Math.ceil(end / 60);
+    const timer = setInterval(() => {
+      start += step;
+      if (start >= end) { el.textContent = label; clearInterval(timer); }
+      else { el.textContent = start > 100 ? (start > 999 ? Math.floor(start/1000)+'K+' : start+'') : start; }
+    }, 20);
+    observer.unobserve(el);
+  });
+}, { threshold: 0.3 });
+
+counters.forEach(c => observer.observe(c));
+
+// Scroll fade-in
+const fadeEls = document.querySelectorAll('.fade-up');
+const fadeObserver = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      fadeObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.12 });
+fadeEls.forEach(el => fadeObserver.observe(el));
+
+// Mission card slideshow
+const mvSlides = document.querySelectorAll('#mv-carousel .mv-slide');
+let mvIndex = 0;
+setInterval(() => {
+  mvSlides[mvIndex].classList.remove('active');
+  mvIndex = (mvIndex + 1) % mvSlides.length;
+  mvSlides[mvIndex].classList.add('active');
+}, 3000);
+</script>
+{% endblock %}

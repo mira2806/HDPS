@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — HeartGuard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/flash.css') }}">
+</head>
+<body data-theme="light">
+
+  <!-- Flash messages -->
+  <div class="flash-container" id="flash-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash-toast flash-{{ category }}" role="alert">
+          <span class="iconify ft-icon" data-icon="{% if category == 'success' %}fluent:checkmark-circle-24-filled{% elif category == 'error' or category == 'danger' %}fluent:dismiss-circle-24-filled{% elif category == 'warning' %}fluent:shield-warning-24-filled{% else %}fluent:info-24-filled{% endif %}"></span>
+          <span class="ft-body">{{ message }}</span>
+          <button class="ft-close" onclick="dismissToast(this)" aria-label="Dismiss">&times;</button>
+        </div>
+      {% endfor %}
+    {% endwith %}
+  </div>
+
+  <!-- Theme toggle -->
+  <button class="login-theme-btn" id="theme-toggle-btn" aria-label="Toggle theme">
+    <span class="iconify theme-icon-light" data-icon="fluent:weather-sunny-24-regular"></span>
+    <span class="iconify theme-icon-dark"  data-icon="fluent:weather-moon-24-regular"></span>
+  </button>
+
+  <div class="login-page">
+
+    <!-- LEFT: BRAND CARD -->
+    <div class="login-brand-card">
+      <div class="brand-deco deco-1"></div>
+      <div class="brand-deco deco-2"></div>
+      <div class="brand-content">
+        <div class="brand-icon-wrap">
+          <img src="{{ url_for('static', filename='images/systemLogo.png') }}" alt="HeartGuard Logo" class="brand-logo-img">
+        </div>
+        <div class="brand-text-group">
+          <h1 class="brand-name">HeartGuard</h1>
+          <p class="brand-tagline">Advancing heart disease detection through machine&nbsp;learning and clinical data.</p>
+        </div>
+      </div>
+      <a href="{{ url_for('index') }}" class="back-home-link">
+        <span class="iconify" data-icon="fluent:arrow-left-24-regular"></span>
+        Back to Home
+      </a>
+    </div>
+
+    <!-- RIGHT: FORM PANEL -->
+    <div class="login-form-panel">
+      <div class="login-form-wrapper">
+
+        <div class="form-header">
+          <h2 class="form-title">Welcome Back</h2>
+          <p class="form-subtitle">Sign in to continue your health journey</p>
+        </div>
+
+        <form id="login-form" method="POST" action="{{ url_for('auth.login') }}" novalidate>
+
+          <div class="field-group">
+            <label for="email" class="field-label">Your email</label>
+            <div class="field-input-wrap">
+              <span class="iconify field-icon" data-icon="fluent:mail-24-regular"></span>
+              <input type="email" id="email" name="email" class="field-input"
+                     placeholder="Enter your email" autocomplete="email" required>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label for="password" class="field-label">Password</label>
+            <div class="field-input-wrap">
+              <span class="iconify field-icon" data-icon="fluent:lock-closed-24-regular"></span>
+              <input type="password" id="password" name="password"
+                     class="field-input has-toggle" placeholder="Enter your password"
+                     autocomplete="current-password" required>
+              <button type="button" class="pwd-toggle" id="pwd-toggle" aria-label="Show password">
+                <span class="iconify" id="pwd-icon" data-icon="fluent:eye-24-regular"></span>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-options">
+            <label class="remember-label">
+              <input type="checkbox" id="remember-me" name="remember">
+              <span class="custom-check">
+                <span class="iconify check-icon" data-icon="fluent:checkmark-12-filled"></span>
+              </span>
+              Remember me
+            </label>
+            <a href="{{ url_for('auth.forgot_password') }}" class="recover-link">Recover password</a>
+          </div>
+
+          <button type="submit" class="btn-signin" id="btn-signin">
+            <span class="btn-signin-text">Sign In</span>
+            <span class="iconify" data-icon="fluent:arrow-right-24-regular"></span>
+          </button>
+
+          <div class="form-divider"><span>Don't have an account?</span></div>
+          <a href="{{ url_for('auth.register') }}" class="btn-register">Create an Account</a>
+
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script>
+    const pwdInput  = document.getElementById('password');
+    const pwdToggle = document.getElementById('pwd-toggle');
+    const pwdIcon   = document.getElementById('pwd-icon');
+    if (pwdToggle) {
+      pwdToggle.addEventListener('click', () => {
+        const show = pwdInput.type === 'password';
+        pwdInput.type = show ? 'text' : 'password';
+        pwdIcon.setAttribute('data-icon', show ? 'fluent:eye-off-24-regular' : 'fluent:eye-24-regular');
+        pwdToggle.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+      });
+    }
+
+    document.getElementById('login-form')?.addEventListener('submit', () => {
+      const btn  = document.getElementById('btn-signin');
+      const text = btn.querySelector('.btn-signin-text');
+      btn.classList.add('loading');
+      text.textContent = 'Signing in…';
+    });
+
+    function dismissToast(btn) {
+      const toast = btn.closest('.flash-toast');
+      toast.classList.add('removing');
+      setTimeout(() => toast.remove(), 300);
+    }
+    // Auto-dismiss after 5s
+    document.querySelectorAll('.flash-toast').forEach(t => {
+      setTimeout(() => { if (t.isConnected) { t.classList.add('removing'); setTimeout(() => t.remove(), 300); } }, 5000);
+    });
+  </script>
+</body>
+</html>
